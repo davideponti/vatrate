@@ -9,7 +9,7 @@ import type {
 
 export interface VatRates {
   standard: number;
-  reduced: number;
+  reduced: number | null;
   super_reduced: number | null;
   parking: number | null;
   zero: number;

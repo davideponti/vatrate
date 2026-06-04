@@ -1,10 +1,6 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Dashboard',
-  description: 'Manage your VATRate API keys and usage.',
-};
+import Link from 'next/link';
 
 // Mock data for demo
 const MOCK_API_KEY = 'vr_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';

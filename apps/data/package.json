@@ -1,0 +1,10 @@
+{
+  "name": "@vatrate/data",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "scrape": "node scripts/scrape-eu.mjs",
+    "deploy": "node scripts/deploy.mjs"
+  }
+}

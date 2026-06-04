@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0.0",
+  "last_updated": "2026-04-06",
+  "source": "European Commission - VAT Rates Database",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["schema_version", "last_updated", "source", "countries"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "last_updated": { "type": "string", "format": "date" },
+    "source": { "type": "string" },
+    "countries": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Z]{2}$": {
+          "type": "object",
+          "required": ["name", "code", "currency", "vat", "digital_services", "saas", "valid_from", "last_change"],
+          "properties": {
+            "name": { "type": "string" },
+            "code": { "type": "string", "pattern": "^[A-Z]{2}$" },
+            "currency": { "type": "string" },
+            "vat": {
+              "type": "object",
+              "required": ["standard", "reduced", "super_reduced", "parking", "zero"],
+              "properties": {
+                "standard": { "type": "number" },
+                "reduced": { "type": ["number", "null"] },
+                "super_reduced": { "type": ["number", "null"] },
+                "parking": { "type": ["number", "null"] },
+                "zero": { "type": "number" }
+              }
+            },
+            "digital_services": { "$ref": "#/definitions/productEntry" },
+            "saas": { "$ref": "#/definitions/productEntry" },
+            "ebooks": { "$ref": "#/definitions/productEntry" },
+            "online_courses": { "$ref": "#/definitions/productEntry" },
+            "notes": { "type": "string" },
+            "valid_from": { "type": "string", "format": "date" },
+            "last_change": { "type": "string", "format": "date" }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "productEntry": {
+      "type": "object",
+      "required": ["classification", "b2b", "b2c"],
+      "properties": {
+        "classification": { "type": "string" },
+        "b2b": {
+          "type": "object",
+          "required": ["rate", "mechanism"],
+          "properties": {
+            "rate": { "type": "number" },
+            "mechanism": { "type": "string", "enum": ["standard", "reverse_charge", "exempt", "outside_scope"] },
+            "condition": { "type": "string" }
+          }
+        },
+        "b2c": {
+          "type": "object",
+          "required": ["rate", "mechanism"],
+          "properties": {
+            "rate": { "type": "number" },
+            "mechanism": { "type": "string", "enum": ["standard", "reverse_charge", "exempt", "outside_scope"] },
+            "threshold_oss": {
+              "type": "object",
+              "properties": {
+                "amount": { "type": "number" },
+                "currency": { "type": "string" },
+                "note": { "type": "string" }
+              }
+            }
+          }
+        },
+        "note": { "type": "string" }
+      }
+    }
+  }
+}

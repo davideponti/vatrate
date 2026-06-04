@@ -1,0 +1,37 @@
+{
+  "last_updated": "2026-04-06",
+  "threshold": {
+    "amount": 10000,
+    "currency": "EUR",
+    "note": "The €10,000 threshold applies to total EU B2C digital service sales."
+  },
+  "country_details": {
+    "AT": { "oss_enabled": true, "threshold_note": "Austria: €10k threshold for digital services." },
+    "BE": { "oss_enabled": true, "threshold_note": "Belgium: €10k threshold for digital services." },
+    "BG": { "oss_enabled": true, "threshold_note": "Bulgaria: €10k threshold for digital services." },
+    "CY": { "oss_enabled": true, "threshold_note": "Cyprus: €10k threshold for digital services." },
+    "CZ": { "oss_enabled": true, "threshold_note": "Czech Republic: €10k threshold." },
+    "DE": { "oss_enabled": true, "threshold_note": "Germany: €10k threshold for digital services." },
+    "DK": { "oss_enabled": true, "threshold_note": "Denmark: €10k threshold." },
+    "EE": { "oss_enabled": true, "threshold_note": "Estonia: €10k threshold." },
+    "EL": { "oss_enabled": true, "threshold_note": "Greece: €10k threshold." },
+    "ES": { "oss_enabled": true, "threshold_note": "Spain: €10k threshold." },
+    "FI": { "oss_enabled": true, "threshold_note": "Finland: €10k threshold." },
+    "FR": { "oss_enabled": true, "threshold_note": "France: €10k threshold." },
+    "HR": { "oss_enabled": true, "threshold_note": "Croatia: €10k threshold." },
+    "HU": { "oss_enabled": true, "threshold_note": "Hungary: €10k threshold." },
+    "IE": { "oss_enabled": true, "threshold_note": "Ireland: €10k threshold." },
+    "IT": { "oss_enabled": true, "threshold_note": "Italy: €10k threshold." },
+    "LT": { "oss_enabled": true, "threshold_note": "Lithuania: €10k threshold." },
+    "LU": { "oss_enabled": true, "threshold_note": "Luxembourg: €10k threshold." },
+    "LV": { "oss_enabled": true, "threshold_note": "Latvia: €10k threshold." },
+    "MT": { "oss_enabled": true, "threshold_note": "Malta: €10k threshold." },
+    "NL": { "oss_enabled": true, "threshold_note": "Netherlands: €10k threshold." },
+    "PL": { "oss_enabled": true, "threshold_note": "Poland: €10k threshold." },
+    "PT": { "oss_enabled": true, "threshold_note": "Portugal: €10k threshold." },
+    "RO": { "oss_enabled": true, "threshold_note": "Romania: €10k threshold." },
+    "SE": { "oss_enabled": true, "threshold_note": "Sweden: €10k threshold." },
+    "SI": { "oss_enabled": true, "threshold_note": "Slovenia: €10k threshold." },
+    "SK": { "oss_enabled": true, "threshold_note": "Slovakia: €10k threshold." }
+  }
+}

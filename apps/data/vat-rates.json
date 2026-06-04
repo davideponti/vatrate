@@ -1,0 +1,795 @@
+{
+  "schema_version": "1.0.0",
+  "last_updated": "2026-04-06",
+  "source": "European Commission - VAT Rates Database",
+  "countries": {
+    "AT": {
+      "name": "Austria",
+      "code": "AT",
+      "currency": "EUR",
+      "vat": { "standard": 20, "reduced": 10, "super_reduced": null, "parking": 13, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge", "condition": "Valid VAT number required" },
+        "b2c": { "rate": 20, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR", "note": "Below €10k: apply home country VAT" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 20, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 10, "mechanism": "standard" },
+        "note": "E-books qualify for reduced rate (10%) in Austria"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 20, "mechanism": "standard" }
+      },
+      "notes": "Digital services: telecom, broadcasting, e-services per EU VAT Directive",
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "BE": {
+      "name": "Belgium",
+      "code": "BE",
+      "currency": "EUR",
+      "vat": { "standard": 21, "reduced": 6, "super_reduced": null, "parking": 12, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge", "condition": "Valid VAT number required" },
+        "b2c": { "rate": 21, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 6, "mechanism": "standard" },
+        "note": "E-books qualify for reduced rate (6%) in Belgium"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "BG": {
+      "name": "Bulgaria",
+      "code": "BG",
+      "currency": "BGN",
+      "vat": { "standard": 20, "reduced": 9, "super_reduced": null, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 20, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 20, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 9, "mechanism": "standard" },
+        "note": "E-books qualify for reduced rate (9%) in Bulgaria"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 20, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "CY": {
+      "name": "Cyprus",
+      "code": "CY",
+      "currency": "EUR",
+      "vat": { "standard": 19, "reduced": 9, "super_reduced": 5, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 19, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 19, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 9, "mechanism": "standard" },
+        "note": "E-books qualify for reduced rate (9%) in Cyprus"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 19, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "CZ": {
+      "name": "Czech Republic",
+      "code": "CZ",
+      "currency": "CZK",
+      "vat": { "standard": 21, "reduced": 12, "super_reduced": null, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 12, "mechanism": "standard" },
+        "note": "E-books qualify for reduced rate (12%) in Czech Republic"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "DE": {
+      "name": "Germany",
+      "code": "DE",
+      "currency": "EUR",
+      "vat": { "standard": 19, "reduced": 7, "super_reduced": null, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 19, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 19, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 7, "mechanism": "standard" },
+        "note": "E-books qualify for reduced rate (7%) in Germany"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 19, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "DK": {
+      "name": "Denmark",
+      "code": "DK",
+      "currency": "DKK",
+      "vat": { "standard": 25, "reduced": null, "super_reduced": null, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 25, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 25, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 25, "mechanism": "standard" },
+        "note": "Denmark applies standard rate (25%) to e-books"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 25, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "EE": {
+      "name": "Estonia",
+      "code": "EE",
+      "currency": "EUR",
+      "vat": { "standard": 22, "reduced": 9, "super_reduced": null, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 22, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 22, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 9, "mechanism": "standard" },
+        "note": "E-books qualify for reduced rate (9%) in Estonia"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 22, "mechanism": "standard" }
+      },
+      "notes": "Standard rate changing to 22% (was 20% before 2025).",
+      "valid_from": "2025-01-01",
+      "last_change": "2025-01-01"
+    },
+    "EL": {
+      "name": "Greece",
+      "code": "EL",
+      "currency": "EUR",
+      "vat": { "standard": 24, "reduced": 13, "super_reduced": 6, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 24, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 24, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 6, "mechanism": "standard" },
+        "note": "E-books qualify for super-reduced rate (6%) in Greece"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 24, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "ES": {
+      "name": "Spain",
+      "code": "ES",
+      "currency": "EUR",
+      "vat": { "standard": 21, "reduced": 10, "super_reduced": 4, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 4, "mechanism": "standard" },
+        "note": "E-books qualify for super-reduced rate (4%) in Spain"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "FI": {
+      "name": "Finland",
+      "code": "FI",
+      "currency": "EUR",
+      "vat": { "standard": 25.5, "reduced": 14, "super_reduced": 10, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 25.5, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 25.5, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 10, "mechanism": "standard" },
+        "note": "E-books qualify for reduced rate (10%) in Finland"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 25.5, "mechanism": "standard" }
+      },
+      "notes": "Standard rate increased from 24% to 25.5% in 2024.",
+      "valid_from": "2024-09-01",
+      "last_change": "2024-09-01"
+    },
+    "FR": {
+      "name": "France",
+      "code": "FR",
+      "currency": "EUR",
+      "vat": { "standard": 20, "reduced": 10, "super_reduced": 5.5, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 20, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 20, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 5.5, "mechanism": "standard" },
+        "note": "E-books qualify for super-reduced rate (5.5%) in France"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 20, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "HR": {
+      "name": "Croatia",
+      "code": "HR",
+      "currency": "EUR",
+      "vat": { "standard": 25, "reduced": 13, "super_reduced": 5, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 25, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 25, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 5, "mechanism": "standard" },
+        "note": "E-books qualify for super-reduced rate (5%) in Croatia"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 25, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "HU": {
+      "name": "Hungary",
+      "code": "HU",
+      "currency": "HUF",
+      "vat": { "standard": 27, "reduced": 18, "super_reduced": 5, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 27, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 27, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 5, "mechanism": "standard" },
+        "note": "E-books qualify for super-reduced rate (5%) in Hungary"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 27, "mechanism": "standard" }
+      },
+      "notes": "Hungary has the highest standard VAT rate in the EU at 27%.",
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "IE": {
+      "name": "Ireland",
+      "code": "IE",
+      "currency": "EUR",
+      "vat": { "standard": 23, "reduced": 13.5, "super_reduced": 9, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 23, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 23, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 9, "mechanism": "standard" },
+        "note": "E-books qualify for reduced rate (9%) in Ireland"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 23, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "IT": {
+      "name": "Italy",
+      "code": "IT",
+      "currency": "EUR",
+      "vat": { "standard": 22, "reduced": 10, "super_reduced": 4, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 22, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 22, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 4, "mechanism": "standard" },
+        "note": "E-books qualify for super-reduced rate (4%) in Italy"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 22, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "LT": {
+      "name": "Lithuania",
+      "code": "LT",
+      "currency": "EUR",
+      "vat": { "standard": 21, "reduced": 9, "super_reduced": null, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 9, "mechanism": "standard" },
+        "note": "E-books qualify for reduced rate (9%) in Lithuania"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "LU": {
+      "name": "Luxembourg",
+      "code": "LU",
+      "currency": "EUR",
+      "vat": { "standard": 17, "reduced": 8, "super_reduced": 3, "parking": 14, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 17, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 17, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 3, "mechanism": "standard" },
+        "note": "E-books qualify for super-reduced rate (3%) in Luxembourg"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 17, "mechanism": "standard" }
+      },
+      "notes": "Luxembourg has one of the lowest standard VAT rates in the EU at 17%.",
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "LV": {
+      "name": "Latvia",
+      "code": "LV",
+      "currency": "EUR",
+      "vat": { "standard": 21, "reduced": 12, "super_reduced": null, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 12, "mechanism": "standard" },
+        "note": "E-books qualify for reduced rate (12%) in Latvia"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "MT": {
+      "name": "Malta",
+      "code": "MT",
+      "currency": "EUR",
+      "vat": { "standard": 18, "reduced": 7, "super_reduced": 5, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 18, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 18, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 5, "mechanism": "standard" },
+        "note": "E-books qualify for super-reduced rate (5%) in Malta"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 18, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "NL": {
+      "name": "Netherlands",
+      "code": "NL",
+      "currency": "EUR",
+      "vat": { "standard": 21, "reduced": 9, "super_reduced": null, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 9, "mechanism": "standard" },
+        "note": "E-books qualify for reduced rate (9%) in the Netherlands"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 21, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "PL": {
+      "name": "Poland",
+      "code": "PL",
+      "currency": "PLN",
+      "vat": { "standard": 23, "reduced": 8, "super_reduced": 5, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 23, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 23, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 5, "mechanism": "standard" },
+        "note": "E-books qualify for super-reduced rate (5%) in Poland"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 23, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "PT": {
+      "name": "Portugal",
+      "code": "PT",
+      "currency": "EUR",
+      "vat": { "standard": 23, "reduced": 13, "super_reduced": 6, "parking": 13, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 23, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 23, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 6, "mechanism": "standard" },
+        "note": "E-books qualify for super-reduced rate (6%) in Portugal"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 23, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "RO": {
+      "name": "Romania",
+      "code": "RO",
+      "currency": "RON",
+      "vat": { "standard": 19, "reduced": 9, "super_reduced": 5, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 19, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 19, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 5, "mechanism": "standard" },
+        "note": "E-books qualify for super-reduced rate (5%) in Romania"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 19, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "SE": {
+      "name": "Sweden",
+      "code": "SE",
+      "currency": "SEK",
+      "vat": { "standard": 25, "reduced": 12, "super_reduced": 6, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 25, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 25, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 6, "mechanism": "standard" },
+        "note": "E-books qualify for super-reduced rate (6%) in Sweden"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 25, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "SI": {
+      "name": "Slovenia",
+      "code": "SI",
+      "currency": "EUR",
+      "vat": { "standard": 22, "reduced": 9.5, "super_reduced": null, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 22, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 22, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 9.5, "mechanism": "standard" },
+        "note": "E-books qualify for reduced rate (9.5%) in Slovenia"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 22, "mechanism": "standard" }
+      },
+      "valid_from": "2024-01-01",
+      "last_change": "2024-01-01"
+    },
+    "SK": {
+      "name": "Slovakia",
+      "code": "SK",
+      "currency": "EUR",
+      "vat": { "standard": 23, "reduced": 10, "super_reduced": null, "parking": null, "zero": 0 },
+      "digital_services": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 23, "mechanism": "standard", "threshold_oss": { "amount": 10000, "currency": "EUR" } }
+      },
+      "saas": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 23, "mechanism": "standard" }
+      },
+      "ebooks": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 10, "mechanism": "standard" },
+        "note": "E-books qualify for reduced rate (10%) in Slovakia"
+      },
+      "online_courses": {
+        "classification": "digital_service",
+        "b2b": { "rate": 0, "mechanism": "reverse_charge" },
+        "b2c": { "rate": 23, "mechanism": "standard" }
+      },
+      "valid_from": "2025-01-01",
+      "last_change": "2025-01-01"
+    }
+  }
+}

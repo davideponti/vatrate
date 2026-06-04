@@ -1,12 +1,41 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 // Mock data for demo
 const MOCK_API_KEY = 'vr_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
 const MOCK_USAGE = { today: 42, thisMonth: 890, limit: 1000 };
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loggedInUser = localStorage.getItem('vatrate_user');
+    if (!loggedInUser) {
+      router.push('/login');
+    } else {
+      setUser(loggedInUser);
+      setLoading(false);
+    }
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('vatrate_user');
+    router.push('/');
+  };
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
+        <div style={{ fontSize: 16, color: '#6b7280' }}>Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f9fafb' }}>
       {/* Nav */}
@@ -31,16 +60,47 @@ export default function DashboardPage() {
             VATRate
           </Link>
           <nav style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-            <Link href="/docs" style={{ color: '#4b5563', textDecoration: 'none' }}>Docs</Link>
-            <Link href="/pricing" style={{ color: '#4b5563', textDecoration: 'none' }}>Pricing</Link>
-            <Link href="/dashboard" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>Dashboard</Link>
+            <Link href="/" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Home</Link>
+            <Link href="/docs" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Docs</Link>
+            <Link href="/pricing" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Pricing</Link>
+            <Link href="/dashboard" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600, fontSize: 15 }}>Dashboard</Link>
+            <button onClick={handleLogout} style={{
+              padding: '8px 20px',
+              background: '#dc2626',
+              color: 'white',
+              borderRadius: 8,
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 14,
+              fontWeight: 600,
+            }}>
+              Logout
+            </button>
+            <a href="https://github.com/davideponti/vatrate" target="_blank" rel="noopener noreferrer"
+              style={{
+                padding: '8px 20px',
+                background: '#1e293b',
+                color: 'white',
+                borderRadius: 8,
+                textDecoration: 'none',
+                fontSize: 14,
+                fontWeight: 600,
+              }}>
+              GitHub
+            </a>
           </nav>
         </div>
       </header>
 
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '40px 24px', width: '100%' }}>
-        <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 8px' }}>Dashboard</h1>
-        <p style={{ color: '#6b7280', margin: '0 0 32px' }}>Manage your API keys and monitor usage.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
+          <div>
+            <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px' }}>Dashboard</h1>
+            <p style={{ color: '#6b7280', margin: 0 }}>
+              Welcome, <strong>{user}</strong>. Manage your API keys and monitor usage.
+            </p>
+          </div>
+        </div>
 
         {/* Stats Grid */}
         <div style={{

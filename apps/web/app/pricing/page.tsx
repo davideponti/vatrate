@@ -95,10 +95,35 @@ export default function PricingPage() {
             VATRate
           </Link>
           <nav style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-            <Link href="/docs" style={{ color: '#4b5563', textDecoration: 'none' }}>Docs</Link>
-            <Link href="/pricing" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>Pricing</Link>
-            <Link href="/dashboard" style={{ color: '#4b5563', textDecoration: 'none' }}>Dashboard</Link>
+            <Link href="/" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Home</Link>
+            <Link href="/docs" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Docs</Link>
+            <Link href="/pricing" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600, fontSize: 15 }}>Pricing</Link>
+            <Link href="/login" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Sign In</Link>
+            <Link href="/signup" style={{
+              padding: '8px 20px',
+              background: '#2563eb',
+              color: 'white',
+              borderRadius: 8,
+              textDecoration: 'none',
+              fontSize: 14,
+              fontWeight: 600,
+            }}>
+              Sign Up
+            </Link>
+            <a href="https://github.com/davideponti/vatrate" target="_blank" rel="noopener noreferrer"
+              style={{
+                padding: '8px 20px',
+                background: '#1e293b',
+                color: 'white',
+                borderRadius: 8,
+                textDecoration: 'none',
+                fontSize: 14,
+                fontWeight: 600,
+              }}>
+              GitHub
+            </a>
           </nav>
+
         </div>
       </header>
 

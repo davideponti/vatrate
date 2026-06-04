@@ -25,13 +25,25 @@ export default function HomePage() {
             VATRate
           </Link>
           <nav style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+            <Link href="/" style={{ color: '#2563eb', textDecoration: 'none', fontSize: 15, fontWeight: 600 }}>Home</Link>
             <Link href="/docs" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Docs</Link>
             <Link href="/pricing" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Pricing</Link>
-            <Link href="/dashboard" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Dashboard</Link>
-            <a href="https://github.com/vatrate" target="_blank" rel="noopener noreferrer"
+            <Link href="/login" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Sign In</Link>
+            <Link href="/signup" style={{
+              padding: '8px 20px',
+              background: '#2563eb',
+              color: 'white',
+              borderRadius: 8,
+              textDecoration: 'none',
+              fontSize: 14,
+              fontWeight: 600,
+            }}>
+              Sign Up
+            </Link>
+            <a href="https://github.com/davideponti/vatrate" target="_blank" rel="noopener noreferrer"
               style={{
                 padding: '8px 20px',
-                background: '#2563eb',
+                background: '#1e293b',
                 color: 'white',
                 borderRadius: 8,
                 textDecoration: 'none',
@@ -41,6 +53,7 @@ export default function HomePage() {
               GitHub
             </a>
           </nav>
+
         </div>
       </header>
 
@@ -307,7 +320,8 @@ export default function HomePage() {
           </div>
           <div style={{ display: 'flex', gap: 20 }}>
             <a href="/docs" style={{ color: '#6b7280', textDecoration: 'none', fontSize: 14 }}>Docs</a>
-            <a href="https://github.com/vatrate" target="_blank" style={{ color: '#6b7280', textDecoration: 'none', fontSize: 14 }}>GitHub</a>
+            <a href="https://github.com/davideponti/vatrate" target="_blank" style={{ color: '#6b7280', textDecoration: 'none', fontSize: 14 }}>GitHub</a>
+
             <Link href="/pricing" style={{ color: '#6b7280', textDecoration: 'none', fontSize: 14 }}>Pricing</Link>
           </div>
         </div>

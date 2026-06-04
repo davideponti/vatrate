@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const result = resolveRate(parsed.data);
+  const params2 = parsed.data as Parameters<typeof resolveRate>[0];
+  const result = resolveRate(params2);
 
   if ('error' in result) {
     return NextResponse.json(result, { status: result.status });

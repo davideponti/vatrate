@@ -13,7 +13,7 @@
     "@supabase/supabase-js": "^2.107.0",
     "@vatrate/api": "*",
     "@vatrate/shared": "*",
-    "next": "^14.2.0",
+    "next": "^15.5.18",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "stripe": "^14.0.0",
@@ -24,6 +24,6 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "typescript": "^5.4.0",
-    "vitest": "^1.0.0"
+    "vitest": "^4.0.0"
   }
 }

@@ -4,7 +4,7 @@
       "main": true
     }
   },
-  "buildCommand": "npx turbo run build --filter=@vatrate/web...",
+  "buildCommand": "cd apps/web && npm run build",
   "outputDirectory": "apps/web/.next",
   "framework": "nextjs",
   "installCommand": "npm install",

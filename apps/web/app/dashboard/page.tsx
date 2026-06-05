@@ -4,27 +4,139 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-// Mock data for demo
-const MOCK_API_KEY = 'vr_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
-const MOCK_USAGE = { today: 42, thisMonth: 890, limit: 1000 };
+interface ApiKey {
+  id: string;
+  name: string;
+  key_prefix: string;
+  environment: string;
+  plan: string;
+  requests_used: number;
+  requests_limit: number;
+  is_active: boolean;
+  last_used_at: string | null;
+  created_at: string;
+  revoked_at: string | null;
+}
+
+interface UserData {
+  email: string;
+  plan: string;
+  requests_used: number;
+  requests_limit: number;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<string | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [newKey, setNewKey] = useState<string | null>(null);
+  const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
 
   useEffect(() => {
-    const loggedInUser = localStorage.getItem('vatrate_user');
-    if (!loggedInUser) {
+    const email = localStorage.getItem('vatrate_user');
+    const token = localStorage.getItem('vatrate_token');
+
+    if (!email || !token) {
       router.push('/login');
-    } else {
-      setUser(loggedInUser);
+      return;
+    }
+
+    fetchData(token);
+  }, [router]);
+
+  const fetchData = async (token: string) => {
+    try {
+      // Fetch API keys
+      const keysRes = await fetch('/api/v1/keys', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (keysRes.status === 401) {
+        // Token expired or invalid, redirect to login
+        localStorage.removeItem('vatrate_user');
+        localStorage.removeItem('vatrate_token');
+        router.push('/login');
+        return;
+      }
+
+      if (keysRes.ok) {
+        const keysData = await keysRes.json();
+        setApiKeys(keysData.keys || []);
+      }
+
+      setLoading(false);
+    } catch (err) {
+      console.error('Failed to fetch dashboard data:', err);
+      setError('Failed to load dashboard data.');
       setLoading(false);
     }
-  }, [router]);
+  };
+
+  const handleGenerateKey = async () => {
+    setError('');
+    const token = localStorage.getItem('vatrate_token');
+    if (!token) return;
+
+    try {
+      const res = await fetch('/api/v1/keys', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: `Key ${apiKeys.length + 1}` }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setNewKey(data.key.full_key);
+        // Refresh the list
+        fetchData(token);
+      } else {
+        const err = await res.json();
+        setError(err.message || 'Failed to generate key');
+      }
+    } catch (err) {
+      setError('Failed to generate API key.');
+    }
+  };
+
+  const handleRevokeKey = async (keyId: string) => {
+    if (!confirm('Are you sure you want to revoke this API key? This action cannot be undone.')) {
+      return;
+    }
+
+    const token = localStorage.getItem('vatrate_token');
+    if (!token) return;
+
+    try {
+      const res = await fetch(`/api/v1/keys/${keyId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        setApiKeys((prev) => prev.filter((k) => k.id !== keyId));
+      } else {
+        const err = await res.json();
+        setError(err.message || 'Failed to revoke key');
+      }
+    } catch (err) {
+      setError('Failed to revoke API key.');
+    }
+  };
+
+  const handleCopyKey = (key: string, id: string) => {
+    navigator.clipboard.writeText(key);
+    setCopiedIndex(id);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('vatrate_user');
+    localStorage.removeItem('vatrate_token');
     router.push('/');
   };
 
@@ -35,6 +147,10 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const totalUsed = apiKeys.reduce((sum, k) => sum + k.requests_used, 0);
+  const totalLimit = apiKeys.length > 0 ? apiKeys[0].requests_limit : 0;
+  const activeKeys = apiKeys.filter((k) => k.is_active && !k.revoked_at);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f9fafb' }}>
@@ -97,10 +213,74 @@ export default function DashboardPage() {
           <div>
             <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px' }}>Dashboard</h1>
             <p style={{ color: '#6b7280', margin: 0 }}>
-              Welcome, <strong>{user}</strong>. Manage your API keys and monitor usage.
+              Manage your API keys and monitor usage.
             </p>
           </div>
+          <button onClick={handleGenerateKey} style={{
+            padding: '12px 24px',
+            background: '#2563eb',
+            color: 'white',
+            borderRadius: 10,
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: 15,
+            fontWeight: 600,
+          }}>
+            + Generate New Key
+          </button>
         </div>
+
+        {error && (
+          <div style={{ background: '#fef2f2', color: '#dc2626', padding: '12px 16px', borderRadius: 8, fontSize: 14, marginBottom: 16 }}>
+            {error}
+          </div>
+        )}
+
+        {/* New Key Display */}
+        {newKey && (
+          <div style={{
+            padding: 20,
+            background: '#f0fdf4',
+            borderRadius: 12,
+            border: '2px solid #22c55e',
+            marginBottom: 24,
+          }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 8px', color: '#166534' }}>
+              🎉 New API Key Generated
+            </h3>
+            <p style={{ fontSize: 14, color: '#15803d', margin: '0 0 12px' }}>
+              Save this key now — it will not be shown again!
+            </p>
+            <div style={{
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              background: 'white',
+              padding: '12px 16px',
+              borderRadius: 8,
+              fontFamily: 'monospace',
+              fontSize: 13,
+              border: '1px solid #bbf7d0',
+            }}>
+              <span style={{ flex: 1, wordBreak: 'break-all' }}>{newKey}</span>
+              <button
+                onClick={() => handleCopyKey(newKey, 'new-key')}
+                style={{
+                  padding: '6px 12px',
+                  background: '#22c55e',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                }}>
+                {copiedIndex === 'new-key' ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div style={{
@@ -110,9 +290,9 @@ export default function DashboardPage() {
           marginBottom: 32,
         }}>
           {[
-            { label: 'API Requests Today', value: MOCK_USAGE.today },
-            { label: 'API Requests This Month', value: `${MOCK_USAGE.thisMonth} / ${MOCK_USAGE.limit}` },
-            { label: 'Plan', value: 'Basic' },
+            { label: 'Active Keys', value: activeKeys.length },
+            { label: 'API Requests This Month', value: `${totalUsed} / ${totalLimit}` },
+            { label: 'Plan', value: apiKeys[0]?.plan || 'free' },
             { label: 'Status', value: 'Active', color: '#059669' },
           ].map((stat) => (
             <div key={stat.label} style={{
@@ -133,7 +313,7 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* API Key */}
+        {/* API Keys List */}
         <div style={{
           padding: 24,
           background: 'white',
@@ -141,48 +321,94 @@ export default function DashboardPage() {
           border: '1px solid #e5e7eb',
           marginBottom: 32,
         }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px' }}>Your API Key</h2>
-          <div style={{
-            display: 'flex',
-            gap: 8,
-            alignItems: 'center',
-            background: '#f3f4f6',
-            padding: '12px 16px',
-            borderRadius: 8,
-            fontFamily: 'monospace',
-            fontSize: 14,
-          }}>
-            <span style={{ flex: 1 }}>{MOCK_API_KEY}</span>
-            <button
-              onClick={() => navigator.clipboard.writeText(MOCK_API_KEY)}
-              style={{
-                padding: '6px 12px',
-                background: '#2563eb',
-                color: 'white',
-                border: 'none',
-                borderRadius: 6,
-                cursor: 'pointer',
-                fontSize: 13,
-                fontWeight: 600,
-              }}>
-              Copy
-            </button>
-          </div>
-          <p style={{ fontSize: 13, color: '#9ca3af', margin: '8px 0 0' }}>
-            Include this key in the Authorization header: <code style={{ background: '#f3f4f6', padding: '2px 4px', borderRadius: 3 }}>Bearer vr_live_...</code>
-          </p>
+          <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 16px' }}>Your API Keys</h2>
+
+          {apiKeys.length === 0 ? (
+            <div style={{ color: '#9ca3af', textAlign: 'center', padding: '40px 0', fontSize: 14 }}>
+              No API keys yet. Click "Generate New Key" to create one.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {activeKeys.map((key) => (
+                <div key={key.id} style={{
+                  padding: 16,
+                  background: '#f9fafb',
+                  borderRadius: 8,
+                  border: '1px solid #e5e7eb',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600 }}>{key.name}</div>
+                      <div style={{
+                        fontFamily: 'monospace',
+                        fontSize: 13,
+                        color: '#6b7280',
+                        marginTop: 4,
+                      }}>
+                        {key.key_prefix}...
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <span style={{
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        background: key.environment === 'live' ? '#dbeafe' : '#fef3c7',
+                        color: key.environment === 'live' ? '#1d4ed8' : '#92400e',
+                      }}>
+                        {key.environment}
+                      </span>
+                      <button
+                        onClick={() => handleRevokeKey(key.id)}
+                        style={{
+                          padding: '4px 10px',
+                          background: '#fef2f2',
+                          color: '#dc2626',
+                          border: '1px solid #fecaca',
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          fontSize: 12,
+                          fontWeight: 600,
+                        }}>
+                        Revoke
+                      </button>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#9ca3af', display: 'flex', gap: 16 }}>
+                    <span>Used: {key.requests_used} / {key.requests_limit}</span>
+                    <span>Created: {new Date(key.created_at).toLocaleDateString()}</span>
+                    {key.last_used_at && <span>Last used: {new Date(key.last_used_at).toLocaleDateString()}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Recent Activity */}
+        {/* Usage Info */}
         <div style={{
           padding: 24,
           background: 'white',
           borderRadius: 12,
           border: '1px solid #e5e7eb',
         }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 16px' }}>Recent Activity</h2>
-          <div style={{ color: '#9ca3af', textAlign: 'center', padding: '40px 0', fontSize: 14 }}>
-            No recent activity to display. Start making API requests to see your usage here.
+          <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 16px' }}>Quick Start</h2>
+          <div style={{ fontSize: 14, color: '#4b5563', lineHeight: 1.7 }}>
+            <p style={{ margin: '0 0 8px' }}>
+              Use your API key in the Authorization header:
+            </p>
+            <pre style={{
+              background: '#1e293b',
+              color: '#e2e8f0',
+              padding: '12px 16px',
+              borderRadius: 8,
+              fontSize: 13,
+              overflow: 'auto',
+            }}>
+{`curl -H "Authorization: Bearer ${apiKeys[0]?.key_prefix || 'vr_live_...'}" \\
+  "https://vatrate.eu/api/v1/rate?country=DE&type=saas&customer=business"`}
+            </pre>
           </div>
         </div>
       </div>

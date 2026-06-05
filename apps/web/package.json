@@ -10,13 +10,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.107.0",
     "@vatrate/api": "*",
     "@vatrate/shared": "*",
     "next": "^14.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "zod": "^3.22.0",
-    "stripe": "^14.0.0"
+    "stripe": "^14.0.0",
+    "zod": "^3.22.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

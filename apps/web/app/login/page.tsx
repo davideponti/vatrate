@@ -8,28 +8,44 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     if (!email || !password) {
       setError('Please fill in all fields.');
+      setLoading(false);
       return;
     }
 
-    // Mock login: check localStorage
-    const users = JSON.parse(localStorage.getItem('vatrate_users') || '[]');
-    const user = users.find((u: any) => u.email === email && u.password === password);
+    try {
+      const res = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (!user) {
-      setError('Invalid email or password.');
-      return;
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || 'Invalid credentials.');
+        setLoading(false);
+        return;
+      }
+
+      // Store user and token
+      localStorage.setItem('vatrate_user', data.user.email);
+      localStorage.setItem('vatrate_token', data.token);
+
+      router.push('/dashboard');
+    } catch (err) {
+      setError('Network error. Please try again.');
+      setLoading(false);
     }
-
-    localStorage.setItem('vatrate_user', email);
-    router.push('/dashboard');
   };
 
   return (
@@ -41,12 +57,7 @@ export default function LoginPage() {
             <Link href="/" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Home</Link>
             <Link href="/docs" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Docs</Link>
             <Link href="/pricing" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Pricing</Link>
-            <Link href="/signup" style={{
-              padding: '8px 20px', background: '#2563eb', color: 'white', borderRadius: 8,
-              textDecoration: 'none', fontSize: 14, fontWeight: 600,
-            }}>
-              Sign Up
-            </Link>
+            <Link href="/signup" style={{ color: '#2563eb', textDecoration: 'none', fontSize: 15, fontWeight: 600 }}>Sign Up</Link>
           </nav>
         </div>
       </header>
@@ -55,7 +66,7 @@ export default function LoginPage() {
         <div style={{ width: '100%', maxWidth: 400, background: 'white', borderRadius: 16, padding: 40, border: '1px solid #e5e7eb' }}>
           <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 4px', textAlign: 'center' }}>Welcome back</h1>
           <p style={{ color: '#6b7280', fontSize: 15, textAlign: 'center', margin: '0 0 32px' }}>
-            Sign in to your VATRate account.
+            Sign in to your VATRate dashboard.
           </p>
 
           {error && (
@@ -72,6 +83,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
+                disabled={loading}
                 style={{
                   width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid #e5e7eb',
                   fontSize: 15, outline: 'none', boxSizing: 'border-box',
@@ -84,18 +96,19 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Your password"
+                placeholder="Enter your password"
+                disabled={loading}
                 style={{
                   width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid #e5e7eb',
                   fontSize: 15, outline: 'none', boxSizing: 'border-box',
                 }}
               />
             </div>
-            <button type="submit" style={{
-              padding: '14px', background: '#2563eb', color: 'white', border: 'none',
-              borderRadius: 10, fontSize: 16, fontWeight: 600, cursor: 'pointer',
+            <button type="submit" disabled={loading} style={{
+              padding: '14px', background: loading ? '#93c5fd' : '#2563eb', color: 'white', border: 'none',
+              borderRadius: 10, fontSize: 16, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
             }}>
-              Sign In
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 

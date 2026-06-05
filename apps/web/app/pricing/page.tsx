@@ -14,7 +14,6 @@ const plans = [
     description: 'For developers exploring EU VAT.',
     features: ['JSON access via GitHub', '100 API requests/day', 'Community support', 'Open source data'],
     cta: 'Get Started',
-
     href: '/docs',
     highlighted: false,
   },
@@ -25,7 +24,6 @@ const plans = [
     description: 'For startups and small projects.',
     features: ['1,000 API requests/month', 'Auto-updated rates', 'Email support', 'OSS threshold checker'],
     cta: 'Subscribe',
-
     href: '#',
     highlighted: true,
   },
@@ -35,7 +33,6 @@ const plans = [
     period: '/month',
     description: 'For growing businesses.',
     features: ['10,000 API requests/month', 'Product classification', 'Rate alerts', 'Priority support'],
-
     cta: 'Subscribe',
     href: '#',
     highlighted: false,
@@ -46,7 +43,6 @@ const plans = [
     period: '/month',
     description: 'For scale and compliance teams.',
     features: ['100,000 API requests/month', 'Country-specific alerts', 'Webhook integration', 'SLA 99.9%', 'Dedicated support'],
-
     cta: 'Contact Us',
     href: '#',
     highlighted: false,

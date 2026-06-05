@@ -4,7 +4,7 @@ import { authenticateRequest } from '@/lib/auth';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
@@ -14,7 +14,7 @@ export async function DELETE(
     );
   }
 
-  const { id: keyId } = params;
+  const { id: keyId } = await params;
 
   if (!keyId) {
     return NextResponse.json(

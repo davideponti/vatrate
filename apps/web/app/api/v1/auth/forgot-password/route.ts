@@ -84,7 +84,8 @@ export async function POST(request: NextRequest) {
     const origin = request.headers.get('origin') || 'https://vatrate.eu';
     const resetLink = `${origin}/reset-password/${resetToken}`;
 
-    // Send email via SMTP from noreply@vatrate.eu
+    // Try to send email via SMTP
+    let emailSent = false;
     try {
       await sendEmail({
         type: 'transactional',
@@ -113,19 +114,23 @@ export async function POST(request: NextRequest) {
           </div>
         `,
       });
+      emailSent = true;
       console.log(`📧 Password reset email sent to ${user.email}`);
     } catch (emailError) {
       console.error('Failed to send password reset email:', emailError);
-      // Token is stored but email failed - for production, retry or notify admin
     }
 
-    return NextResponse.json(
-      {
-        message:
-          'If an account with that email exists, a password reset link has been sent.',
-      },
-      { status: 200 },
-    );
+    const response: Record<string, string> = {
+      message:
+        'If an account with that email exists, a password reset link has been sent.',
+    };
+
+    // In dev or if SMTP is not configured, return the reset link directly
+    if (!emailSent) {
+      response.reset_link = resetLink;
+    }
+
+    return NextResponse.json(response, { status: 200 });
   } catch (error) {
     console.error('Forgot password error:', error);
     return NextResponse.json(

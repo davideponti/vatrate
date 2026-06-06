@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     // Find user (include password_hash for verification)
     const { data: user, error: userError } = await getSupabaseClient()
       .from('users')
-      .select('id, email, plan, requests_limit, password_hash')
+      .select('id, email, plan, requests_limit, password_hash, email_verified')
       .eq('email', email.toLowerCase())
       .single();
 
@@ -50,6 +50,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'UNAUTHORIZED', message: 'Invalid email or password.', status: 401 },
         { status: 401 },
+      );
+    }
+
+    // Check if email is verified
+    if (!user.email_verified) {
+      return NextResponse.json(
+        {
+          error: 'EMAIL_NOT_VERIFIED',
+          message: 'Please verify your email before signing in. Check your inbox for a verification code.',
+          status: 403,
+          email_verified: false,
+        },
+        { status: 403 },
       );
     }
 

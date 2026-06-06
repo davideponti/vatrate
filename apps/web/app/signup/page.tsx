@@ -9,7 +9,9 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [newKey, setNewKey] = useState<string | null>(null);
+  const [step, setStep] = useState<'signup' | 'verify'>('signup');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [createdEmail, setCreatedEmail] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,75 +40,151 @@ export default function SignupPage() {
         return;
       }
 
-      // Store user and session token
-      localStorage.setItem('vatrate_user', data.user.email);
-      localStorage.setItem('vatrate_token', data.token);
-
-      // Show the API key
-      setNewKey(data.api_key);
-
-      // Redirect after a moment
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 5000);
+      setCreatedEmail(email);
+      setStep('verify');
+      setLoading(false);
     } catch (err) {
       setError('Network error. Please try again.');
       setLoading(false);
     }
   };
 
-  if (newKey) {
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    if (!verificationCode) {
+      setError('Please enter the verification code.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/v1/auth/verify-confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: createdEmail, code: verificationCode }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || 'Invalid verification code.');
+        setLoading(false);
+        return;
+      }
+
+      // Now log in automatically
+      const loginRes = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: createdEmail, password }),
+      });
+
+      const loginData = await loginRes.json();
+
+      if (loginRes.ok) {
+        localStorage.setItem('vatrate_user', loginData.user.email);
+        localStorage.setItem('vatrate_token', loginData.token);
+        router.push('/dashboard');
+      } else {
+        // If auto-login fails, redirect to login page
+        router.push('/login');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/v1/auth/verify-send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: createdEmail }),
+      });
+
+      if (res.ok) {
+        setError('');
+        alert('A new verification code has been sent to your email.');
+      } else {
+        const data = await res.json();
+        setError(data.message || 'Failed to resend code.');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    }
+    setLoading(false);
+  };
+
+  if (step === 'verify') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f9fafb', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <div style={{ maxWidth: 500, width: '100%', background: 'white', borderRadius: 16, padding: 40, border: '1px solid #e5e7eb', textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
-          <h1 style={{ fontSize: 24, fontWeight: 800, margin: '0 0 8px' }}>Account Created!</h1>
-          <p style={{ color: '#6b7280', fontSize: 15, margin: '0 0 24px' }}>
-            Here is your API key — save it now. You won't see it again!
-          </p>
-
-          <div style={{
-            background: '#f0fdf4',
-            border: '2px solid #22c55e',
-            borderRadius: 12,
-            padding: 16,
-            marginBottom: 24,
-          }}>
-            <div style={{
-              fontFamily: 'monospace',
-              fontSize: 13,
-              wordBreak: 'break-all',
-              background: 'white',
-              padding: 12,
-              borderRadius: 8,
-              border: '1px solid #bbf7d0',
-              marginBottom: 12,
-              textAlign: 'left',
-            }}>
-              {newKey}
-            </div>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(newKey);
-              }}
-              style={{
-                padding: '10px 20px',
-                background: '#22c55e',
-                color: 'white',
-                border: 'none',
-                borderRadius: 8,
-                cursor: 'pointer',
-                fontSize: 14,
-                fontWeight: 600,
-                width: '100%',
-              }}>
-              Copy API Key
-            </button>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f9fafb' }}>
+        <header style={{ borderBottom: '1px solid #e5e7eb', padding: '16px 24px', background: 'white' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Link href="/" style={{ fontSize: 24, fontWeight: 700, color: '#2563eb', textDecoration: 'none' }}>VATRate</Link>
           </div>
+        </header>
 
-          <p style={{ fontSize: 14, color: '#9ca3af' }}>
-            Redirecting to dashboard...
-          </p>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ width: '100%', maxWidth: 420, background: 'white', borderRadius: 16, padding: 40, border: '1px solid #e5e7eb' }}>
+            <div style={{ textAlign: 'center', marginBottom: 32 }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>📧</div>
+              <h1 style={{ fontSize: 24, fontWeight: 800, margin: '0 0 8px' }}>Verify your email</h1>
+              <p style={{ color: '#6b7280', fontSize: 15, margin: 0, lineHeight: 1.5 }}>
+                We sent a verification code to<br />
+                <strong style={{ color: '#1a1a2e' }}>{createdEmail}</strong>
+              </p>
+            </div>
+
+            {error && (
+              <div style={{ background: '#fef2f2', color: '#dc2626', padding: '12px 16px', borderRadius: 8, fontSize: 14, marginBottom: 16 }}>
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleVerifyCode} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: 14, fontWeight: 600, display: 'block', marginBottom: 6 }}>Verification Code</label>
+                <input
+                  type="text"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                  maxLength={6}
+                  disabled={loading}
+                  style={{
+                    width: '100%', padding: '14px 16px', borderRadius: 8, border: '1px solid #e5e7eb',
+                    fontSize: 24, outline: 'none', boxSizing: 'border-box', textAlign: 'center',
+                    letterSpacing: 8, fontFamily: 'monospace',
+                  }}
+                />
+              </div>
+              <button type="submit" disabled={loading} style={{
+                padding: '14px', background: loading ? '#93c5fd' : '#2563eb', color: 'white', border: 'none',
+                borderRadius: 10, fontSize: 16, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+              }}>
+                {loading ? 'Verifying...' : 'Verify Email'}
+              </button>
+            </form>
+
+            <div style={{ textAlign: 'center', marginTop: 20 }}>
+              <button
+                onClick={handleResendCode}
+                disabled={loading}
+                style={{
+                  background: 'none', border: 'none', color: '#2563eb', cursor: loading ? 'not-allowed' : 'pointer',
+                  fontSize: 14, fontWeight: 500, textDecoration: 'underline',
+                }}>
+                Resend verification code
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );

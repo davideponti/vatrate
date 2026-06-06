@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
             })
             .eq('id', userId);
         } else {
-          // Create new user
+          // Create new user (with email_verified=true since they paid via Stripe)
           const { data: newUser } = await getSupabaseClient()
             .from('users')
             .insert({
@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
               stripe_customer_id: stripeCustomerId,
               plan,
               requests_limit: 1000,
+              email_verified: true,
             })
             .select('id')
             .single();

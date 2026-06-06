@@ -33,6 +33,8 @@ export default function DashboardPage() {
   const [error, setError] = useState('');
   const [newKey, setNewKey] = useState<string | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
+  const [keyName, setKeyName] = useState('');
+  const [showKeyForm, setShowKeyForm] = useState(false);
 
   useEffect(() => {
     const email = localStorage.getItem('vatrate_user');
@@ -79,6 +81,8 @@ export default function DashboardPage() {
     const token = localStorage.getItem('vatrate_token');
     if (!token) return;
 
+    const name = keyName.trim() || `Key ${apiKeys.length + 1}`;
+
     try {
       const res = await fetch('/api/v1/keys', {
         method: 'POST',
@@ -86,12 +90,14 @@ export default function DashboardPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: `Key ${apiKeys.length + 1}` }),
+        body: JSON.stringify({ name }),
       });
 
       if (res.ok) {
         const data = await res.json();
         setNewKey(data.key.full_key);
+        setKeyName('');
+        setShowKeyForm(false);
         // Refresh the list
         fetchData(token);
       } else {
@@ -167,7 +173,7 @@ export default function DashboardPage() {
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-          <Link href="/" style={{
+          <Link href="/dashboard" style={{
             fontSize: 24,
             fontWeight: 700,
             color: '#2563eb',
@@ -176,10 +182,8 @@ export default function DashboardPage() {
             VATRate
           </Link>
           <nav style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-            <Link href="/" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Home</Link>
-            <Link href="/docs" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Docs</Link>
-            <Link href="/pricing" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Pricing</Link>
             <Link href="/dashboard" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600, fontSize: 15 }}>Dashboard</Link>
+            <Link href="/dashboard/logs" style={{ color: '#4b5563', textDecoration: 'none', fontSize: 15 }}>Logs</Link>
             <button onClick={handleLogout} style={{
               padding: '8px 20px',
               background: '#dc2626',
@@ -216,7 +220,7 @@ export default function DashboardPage() {
               Manage your API keys and monitor usage.
             </p>
           </div>
-          <button onClick={handleGenerateKey} style={{
+          <button onClick={() => setShowKeyForm(true)} style={{
             padding: '12px 24px',
             background: '#2563eb',
             color: 'white',
@@ -233,6 +237,66 @@ export default function DashboardPage() {
         {error && (
           <div style={{ background: '#fef2f2', color: '#dc2626', padding: '12px 16px', borderRadius: 8, fontSize: 14, marginBottom: 16 }}>
             {error}
+          </div>
+        )}
+
+        {/* Key Generation Form */}
+        {showKeyForm && (
+          <div style={{
+            padding: 20,
+            background: 'white',
+            borderRadius: 12,
+            border: '2px solid #2563eb',
+            marginBottom: 24,
+          }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 12px', color: '#1e40af' }}>
+              Name your API Key
+            </h3>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input
+                type="text"
+                value={keyName}
+                onChange={(e) => setKeyName(e.target.value)}
+                placeholder="My API Key"
+                style={{
+                  flex: 1,
+                  padding: '10px 14px',
+                  borderRadius: 8,
+                  border: '1px solid #e5e7eb',
+                  fontSize: 15,
+                  outline: 'none',
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleGenerateKey();
+                  if (e.key === 'Escape') setShowKeyForm(false);
+                }}
+                autoFocus
+              />
+              <button onClick={handleGenerateKey} style={{
+                padding: '10px 20px',
+                background: '#2563eb',
+                color: 'white',
+                border: 'none',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 600,
+              }}>
+                Generate
+              </button>
+              <button onClick={() => setShowKeyForm(false)} style={{
+                padding: '10px 20px',
+                background: '#f3f4f6',
+                color: '#4b5563',
+                border: '1px solid #e5e7eb',
+                borderRadius: 8,
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 600,
+              }}>
+                Cancel
+              </button>
+            </div>
           </div>
         )}
 

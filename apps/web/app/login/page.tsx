@@ -9,11 +9,36 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
   const router = useRouter();
+
+  const handleResendVerification = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/v1/auth/verify-send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) {
+        setError('');
+        alert('A new verification code has been sent to your email.');
+        router.push('/signup');
+      } else {
+        const data = await res.json();
+        setError(data.message || 'Failed to resend code.');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    }
+    setLoading(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setNeedsVerification(false);
     setLoading(true);
 
     if (!email || !password) {
@@ -32,7 +57,12 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || 'Invalid credentials.');
+        if (data.error === 'EMAIL_NOT_VERIFIED') {
+          setNeedsVerification(true);
+          setError('Please verify your email before signing in.');
+        } else {
+          setError(data.message || 'Invalid credentials.');
+        }
         setLoading(false);
         return;
       }
@@ -117,7 +147,20 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p style={{ textAlign: 'center', color: '#6b7280', fontSize: 14, marginTop: 24 }}>
+          {needsVerification && (
+            <div style={{ textAlign: 'center', marginTop: 16 }}>
+              <button
+                onClick={handleResendVerification}
+                disabled={loading}
+                style={{
+                  background: 'none', border: 'none', color: '#2563eb', cursor: loading ? 'not-allowed' : 'pointer',
+                  fontSize: 14, fontWeight: 500, textDecoration: 'underline',
+                }}>
+                Resend verification code
+              </button>
+            </div>
+          )}
+          <p style={{ textAlign: 'center', color: '#6b7280', fontSize: 14, marginTop: needsVerification ? 12 : 24 }}>
             Don't have an account?{' '}
             <Link href="/signup" style={{ color: '#2563eb', fontWeight: 600 }}>Sign up</Link>
           </p>

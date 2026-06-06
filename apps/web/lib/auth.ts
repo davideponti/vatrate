@@ -152,6 +152,7 @@ export async function logUsage(params: {
     const { createHash } = await import('crypto');
     const ipHash = createHash('sha256').update(params.ip).digest('hex').substring(0, 16);
 
+    // Log to usage_logs for stats
     await getSupabaseClient().from('usage_logs').insert({
       api_key_id: params.apiKeyId,
       user_id: params.userId,
@@ -161,6 +162,18 @@ export async function logUsage(params: {
       status: params.status,
       ip_hash: ipHash,
       user_agent: params.userAgent.substring(0, 255),
+    });
+
+    // Log to api_logs for the logs page
+    await getSupabaseClient().from('api_logs').insert({
+      api_key_id: params.apiKeyId,
+      user_id: params.userId,
+      method: params.method,
+      path: params.endpoint,
+      status_code: params.status,
+      ip_address: params.ip,
+      user_agent: params.userAgent.substring(0, 255),
+      response_time_ms: null,
     });
 
     await getSupabaseClient().rpc('increment_api_key_usage_by_id', {

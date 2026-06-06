@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
-import { generateApiKey } from '@/lib/api-key';
-import { createSession } from '@/lib/session';
+import { sendEmail } from '@/lib/email';
 import crypto from 'crypto';
 
 function hashPassword(password: string): string {
   return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+function generateVerificationCode(): string {
+  return crypto.randomInt(100000, 999999).toString();
 }
 
 // POST /api/v1/auth/signup
@@ -59,7 +62,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create user with password hash
+    // Generate verification code (valid for 15 minutes)
+    const code = generateVerificationCode();
+    const verificationExpiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+    // Create user with password hash (unverified)
     const passwordHash = hashPassword(password);
     const { data: newUser, error: userError } = await getSupabaseClient()
       .from('users')
@@ -67,7 +74,10 @@ export async function POST(request: NextRequest) {
         email: email.toLowerCase(),
         password_hash: passwordHash,
         plan: 'free',
-        requests_limit: 30000,
+        requests_limit: 3000, // Free tier: ~100/day = 3000/month
+        email_verified: false,
+        verification_code: code,
+        verification_expires_at: verificationExpiresAt,
       })
       .select('id, email, plan, requests_limit, created_at')
       .single();
@@ -80,25 +90,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate the first API key automatically
-    const { fullKey, keyPrefix, keyHash: apiKeyHash } = generateApiKey('live');
-
-    const { error: keyError } = await getSupabaseClient().from('api_keys').insert({
-      user_id: newUser.id,
-      key_hash: apiKeyHash,
-      key_prefix: keyPrefix,
-      name: 'My First Key',
-      environment: 'live',
-      plan: 'free',
-      requests_limit: 30000,
-    });
-
-    if (keyError) {
-      console.error('Failed to create API key:', keyError);
+    // Send verification email
+    try {
+      await sendEmail({
+        to: email,
+        subject: 'Verify your VATRate account',
+        html: `
+          <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+            <h2 style="color: #2563eb;">Verify your email</h2>
+            <p style="color: #374151; font-size: 16px; line-height: 1.5;">
+              Thanks for signing up for VATRate. Use the code below to verify your email address:
+            </p>
+            <div style="
+              background: #eff6ff;
+              border: 2px solid #2563eb;
+              border-radius: 12px;
+              padding: 24px;
+              text-align: center;
+              margin: 24px 0;
+            ">
+              <span style="
+                font-size: 36px;
+                font-weight: 800;
+                letter-spacing: 8px;
+                color: #1e40af;
+                font-family: monospace;
+              ">${code}</span>
+            </div>
+            <p style="color: #6b7280; font-size: 14px;">
+              This code expires in 15 minutes. If you didn't sign up, you can safely ignore this email.
+            </p>
+          </div>
+        `,
+      });
+    } catch (emailError) {
+      console.error('Failed to send verification email, but user was created:', emailError);
     }
-
-    // Create web session token (valid for 7 days)
-    const sessionToken = await createSession(newUser.id);
 
     return NextResponse.json(
       {
@@ -107,10 +134,8 @@ export async function POST(request: NextRequest) {
           email: newUser.email,
           plan: newUser.plan,
         },
-        api_key: fullKey, // 👈 One-time display
-        token: sessionToken,
-        message:
-          'Account created successfully. Save your API key now — it will not be shown again.',
+        message: 'Account created. Please check your email for a verification code to activate your account.',
+        email_verified: false,
       },
       { status: 201 },
     );

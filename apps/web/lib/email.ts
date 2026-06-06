@@ -40,16 +40,19 @@ const FROM_ADDRESSES: Record<string, { email: string; name: string }> = {
 /**
  * Send an email via Resend (free plan: 100 emails/day).
  *
- * - Use `type: 'transactional'` for password resets (from noreply@vatrate.eu)
- * - Use `type: 'info'` for informational emails (from info@vatrate.eu)
+ * ⚠️ IMPORTANT: Until your domain (vatrate.eu) is verified on Resend,
+ *    Resend will only send from "onboarding@resend.dev".
+ *    To fix: go to https://resend.com → Domains → verify vatrate.eu
+ *    The TXT record takes a few minutes to propagate after adding it.
+ *
+ *    For now, we fallback to onboarding@resend.dev so emails still work
+ *    during domain verification.
  *
  * Configure in .env.local:
  *   RESEND_API_KEY=re_...   (from https://resend.com)
  *
- * First time setup:
- *   1. Sign up at https://resend.com
- *   2. Add domain vatrate.eu and verify it with a TXT record
- *   3. Get your API key from the dashboard
+ * And on Vercel:
+ *   Project Settings → Environment Variables → add RESEND_API_KEY
  */
 export async function sendEmail(params: SendEmailParams): Promise<void> {
   const fromConfig = FROM_ADDRESSES[params.type || 'transactional'];
@@ -65,6 +68,27 @@ export async function sendEmail(params: SendEmailParams): Promise<void> {
     });
 
     if (error) {
+      // If domain not yet verified, fall back to Resend's default sender
+      if (
+        error.message?.includes('not verified') ||
+        error.message?.includes('domain')
+      ) {
+        console.warn(
+          '⚠️ Domain not yet verified on Resend. Falling back to onboarding@resend.dev',
+        );
+        const { data: data2, error: error2 } = await resend.emails.send({
+          from: 'VATRate <onboarding@resend.dev>',
+          to: params.to,
+          subject: params.subject,
+          html: params.html,
+          text: params.text || params.html.replace(/<[^>]*>/g, ''),
+        });
+        if (error2) throw error2;
+        console.log(
+          `📧 [${params.type || 'transactional'}] Email sent via Resend default sender to ${params.to} (id: ${data2?.id})`,
+        );
+        return;
+      }
       throw error;
     }
 

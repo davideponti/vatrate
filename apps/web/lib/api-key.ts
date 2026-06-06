@@ -32,21 +32,21 @@ export function hashApiKey(apiKey: string): string {
 }
 
 /**
- * Extract the key from an Authorization header value.
- * Supports: "Bearer vr_live_..." or "vr_live_..."
+ * Extract the Bearer token from an Authorization header.
+ * Supports: "Bearer <token>" or just "<token>"
+ * Does NOT validate the token format — that's done by authenticateRequest.
  */
 export function extractKeyFromHeader(authHeader: string | null): string | null {
   if (!authHeader) return null;
 
-  // Support both "Bearer <key>" and bare key
+  // Support both "Bearer <token>" and bare token
   const match = authHeader.match(/^(?:Bearer\s+)?(.+)$/i);
   if (!match) return null;
 
-  const key = match[1].trim();
-  // Validate key format: vr_live_ or vr_test_ followed by hex chars
-  if (!/^vr_(live|test)_[0-9a-f]{64}$/.test(key)) return null;
+  const token = match[1].trim();
+  if (!token) return null;
 
-  return key;
+  return token;
 }
 
 /**

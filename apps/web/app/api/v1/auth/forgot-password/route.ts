@@ -84,9 +84,10 @@ export async function POST(request: NextRequest) {
     const origin = request.headers.get('origin') || 'https://vatrate.eu';
     const resetLink = `${origin}/reset-password/${resetToken}`;
 
-    // Send email via SMTP
+    // Send email via SMTP from noreply@vatrate.eu
     try {
       await sendEmail({
+        type: 'transactional',
         to: user.email,
         subject: 'Reset your VATRate password',
         html: `

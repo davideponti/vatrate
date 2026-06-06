@@ -5,14 +5,15 @@ let _transporter: nodemailer.Transporter | null = null;
 function getTransporter(): nodemailer.Transporter {
   if (_transporter) return _transporter;
 
-  const host = process.env.SMTP_HOST || '';
+  // Default to Gmail SMTP (free service)
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = parseInt(process.env.SMTP_PORT || '587', 10);
   const user = process.env.SMTP_USER || '';
   const pass = process.env.SMTP_PASS || '';
 
-  if (!host || !user || !pass) {
+  if (!user || !pass) {
     throw new Error(
-      '⚠️ SMTP not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS in .env.local',
+      '⚠️ SMTP not configured. Set SMTP_USER and SMTP_PASS in .env.local',
     );
   }
 
@@ -47,10 +48,14 @@ const FROM_ADDRESSES: Record<string, { email: string; name: string }> = {
 };
 
 /**
- * Send an email via SMTP.
+ * Send an email via SMTP (default: Gmail SMTP, free).
  *
- * - Use `type: 'transactional'` for password resets (default)
- * - Use `type: 'info'` for informational emails
+ * - Use `type: 'transactional'` for password resets (from noreply@vatrate.eu)
+ * - Use `type: 'info'` for informational emails (from info@vatrate.eu)
+ *
+ * Configure in .env.local:
+ *   SMTP_USER=tua.email@gmail.com
+ *   SMTP_PASS=xxxx xxxx xxxx xxxx   (Gmail App Password)
  */
 export async function sendEmail(params: SendEmailParams): Promise<void> {
   const fromConfig = FROM_ADDRESSES[params.type || 'transactional'];

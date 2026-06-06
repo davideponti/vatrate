@@ -32,10 +32,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Find user
+    // Find user (include password_hash for verification)
     const { data: user, error: userError } = await getSupabaseClient()
       .from('users')
-      .select('id, email, plan, requests_limit')
+      .select('id, email, plan, requests_limit, password_hash')
       .eq('email', email.toLowerCase())
       .single();
 
@@ -46,9 +46,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For MVP: simple password hash comparison
-    // In production: use Supabase Auth or bcrypt
+    // Verify password
     const passwordHash = hashPassword(password);
+
+    // For accounts created before password_hash was added, check if hash is empty
+    if (!user.password_hash || user.password_hash !== passwordHash) {
+      return NextResponse.json(
+        { error: 'UNAUTHORIZED', message: 'Invalid email or password.', status: 401 },
+        { status: 401 },
+      );
+    }
 
     // Get API keys for this user
     const { data: apiKeys } = await getSupabaseClient()

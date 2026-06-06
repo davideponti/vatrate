@@ -62,12 +62,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create user
+    // Create user with password hash
     const passwordHash = hashPassword(password);
     const { data: newUser, error: userError } = await getSupabaseClient()
       .from('users')
       .insert({
         email: email.toLowerCase(),
+        password_hash: passwordHash,
         plan: 'free',
         requests_limit: 30000,
       })

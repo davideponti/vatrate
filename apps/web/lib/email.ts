@@ -1,30 +1,20 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-let _transporter: nodemailer.Transporter | null = null;
+let _resend: Resend | null = null;
 
-function getTransporter(): nodemailer.Transporter {
-  if (_transporter) return _transporter;
+function getResend(): Resend {
+  if (_resend) return _resend;
 
-  // Default to Gmail SMTP (free service)
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = parseInt(process.env.SMTP_PORT || '587', 10);
-  const user = process.env.SMTP_USER || '';
-  const pass = process.env.SMTP_PASS || '';
+  const apiKey = process.env.RESEND_API_KEY || '';
 
-  if (!user || !pass) {
+  if (!apiKey) {
     throw new Error(
-      '⚠️ SMTP not configured. Set SMTP_USER and SMTP_PASS in .env.local',
+      '⚠️ RESEND_API_KEY not set in .env.local',
     );
   }
 
-  _transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure: port === 465,
-    auth: { user, pass },
-  });
-
-  return _transporter;
+  _resend = new Resend(apiKey);
+  return _resend;
 }
 
 export interface SendEmailParams {
@@ -48,32 +38,41 @@ const FROM_ADDRESSES: Record<string, { email: string; name: string }> = {
 };
 
 /**
- * Send an email via SMTP (default: Gmail SMTP, free).
+ * Send an email via Resend (free plan: 100 emails/day).
  *
  * - Use `type: 'transactional'` for password resets (from noreply@vatrate.eu)
  * - Use `type: 'info'` for informational emails (from info@vatrate.eu)
  *
  * Configure in .env.local:
- *   SMTP_USER=tua.email@gmail.com
- *   SMTP_PASS=xxxx xxxx xxxx xxxx   (Gmail App Password)
+ *   RESEND_API_KEY=re_...   (from https://resend.com)
+ *
+ * First time setup:
+ *   1. Sign up at https://resend.com
+ *   2. Add domain vatrate.eu and verify it with a TXT record
+ *   3. Get your API key from the dashboard
  */
 export async function sendEmail(params: SendEmailParams): Promise<void> {
   const fromConfig = FROM_ADDRESSES[params.type || 'transactional'];
 
   try {
-    const transporter = getTransporter();
-    await transporter.sendMail({
-      from: `"${fromConfig.name}" <${fromConfig.email}>`,
+    const resend = getResend();
+    const { data, error } = await resend.emails.send({
+      from: `${fromConfig.name} <${fromConfig.email}>`,
       to: params.to,
       subject: params.subject,
       html: params.html,
       text: params.text || params.html.replace(/<[^>]*>/g, ''),
     });
+
+    if (error) {
+      throw error;
+    }
+
     console.log(
-      `📧 [${params.type || 'transactional'}] Email sent to ${params.to}: "${params.subject}"`,
+      `📧 [${params.type || 'transactional'}] Email sent to ${params.to}: "${params.subject}" (id: ${data?.id})`,
     );
   } catch (error) {
-    console.error('Failed to send email:', error);
+    console.error('Failed to send email via Resend:', error);
     throw error;
   }
 }

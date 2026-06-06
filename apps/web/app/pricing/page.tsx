@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 const plans = [
-  { name: 'Open Source', price: '€0', period: 'forever', desc: 'For developers exploring EU VAT.', features: ['JSON access via GitHub', '100 API requests/day', 'Community support', 'Open source data'], cta: 'Get Started', href: '/docs', highlighted: false },
+  { name: 'Open Source', price: '€0', period: 'forever', desc: 'For developers exploring EU VAT.', features: ['JSON access via GitHub', '100 API requests/month', 'Community support', 'Open source data'], cta: 'Get Started', href: '/docs', highlighted: false },
   { name: 'API Basic', price: '€19', period: '/month', desc: 'For startups and small projects.', features: ['3,000 API requests/month', 'Auto-updated rates', 'Email support', 'OSS threshold checker'], cta: 'Subscribe', href: '#', highlighted: true },
   { name: 'API Pro', price: '€49', period: '/month', desc: 'For growing businesses.', features: ['10,000 API requests/month', 'Product classification', 'Rate alerts', 'Priority support'], cta: 'Subscribe', href: '#', highlighted: false },
   { name: 'Enterprise', price: '€149', period: '/month', desc: 'For scale and compliance teams.', features: ['100,000 API requests/month', 'Country-specific alerts', 'Webhook integration', 'SLA 99.9%', 'Dedicated support'], cta: 'Contact Us', href: '#', highlighted: false },

@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         email: email.toLowerCase(),
         password_hash: passwordHash,
         plan: 'free',
-        requests_limit: 3000, // Free tier: ~100/day = 3000/month
+        requests_limit: 100, // Free tier: 100 requests/month
         email_verified: false,
         verification_code: code,
         verification_expires_at: verificationExpiresAt,

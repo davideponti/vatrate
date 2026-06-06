@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     const plan = user?.plan || 'free';
-    const requestsLimit = user?.requests_limit || 3000;
+    const requestsLimit = user?.requests_limit || 100;
 
     // Store the hash (never the full key!)
     const { data: newKey, error: insertError } = await getSupabaseClient()

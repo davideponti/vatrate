@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 import { generateApiKey } from '@/lib/api-key';
 
 /**
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
       try {
         // Check if user exists
-        const { data: existingUser } = await supabase
+        const { data: existingUser } = await getSupabaseClient()
           .from('users')
           .select('id')
           .eq('email', email)
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
             enterprise: 100000,
             widget: 50000,
           };
-          await supabase
+          await getSupabaseClient()
             .from('users')
             .update({
               plan,
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
             .eq('id', userId);
         } else {
           // Create new user
-          const { data: newUser } = await supabase
+          const { data: newUser } = await getSupabaseClient()
             .from('users')
             .insert({
               email,
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
           widget: 50000,
         };
 
-        await supabase.from('api_keys').insert({
+        await getSupabaseClient().from('api_keys').insert({
           user_id: userId,
           key_hash: keyHash,
           key_prefix: keyPrefix,
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
 
       // Update user's status (reset usage, extend expiration, etc.)
       try {
-        await supabase
+        await getSupabaseClient()
           .from('users')
           .update({ updated_at: new Date().toISOString() })
           .eq('stripe_customer_id', stripeCustomerId);
@@ -128,20 +128,20 @@ export async function POST(request: NextRequest) {
 
       // Downgrade user to free plan
       try {
-        const { data: user } = await supabase
+        const { data: user } = await getSupabaseClient()
           .from('users')
           .select('id')
           .eq('stripe_customer_id', stripeCustomerId)
           .single();
 
         if (user) {
-          await supabase
+          await getSupabaseClient()
             .from('users')
             .update({ plan: 'free', requests_limit: 30000 })
             .eq('id', user.id);
 
           // Revoke all API keys for this user
-          await supabase
+          await getSupabaseClient()
             .from('api_keys')
             .update({ is_active: false, revoked_at: new Date().toISOString() })
             .eq('user_id', user.id);

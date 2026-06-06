@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { supabase } from './supabase';
+import { getSupabaseClient } from './supabase';
 import { extractKeyFromHeader, hashApiKey } from './api-key';
 
 export interface AuthResult {
@@ -52,7 +52,7 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
 
   try {
     // Look up the key
-    const { data: apiKeyData, error: lookupError } = await supabase
+    const { data: apiKeyData, error: lookupError } = await getSupabaseClient()
       .from('api_keys')
       .select('id, user_id, plan, requests_used, requests_limit, is_active, revoked_at, expires_at')
       .eq('key_hash', keyHash)
@@ -132,7 +132,7 @@ export async function logUsage(params: {
     const { createHash } = await import('crypto');
     const ipHash = createHash('sha256').update(params.ip).digest('hex').substring(0, 16);
 
-    await supabase.from('usage_logs').insert({
+    await getSupabaseClient().from('usage_logs').insert({
       api_key_id: params.apiKeyId,
       user_id: params.userId,
       endpoint: params.endpoint,
@@ -144,7 +144,7 @@ export async function logUsage(params: {
     });
 
     // Increment the requests_used counter directly using the UUID
-    await supabase.rpc('increment_api_key_usage_by_id', {
+    await getSupabaseClient().rpc('increment_api_key_usage_by_id', {
       p_key_id: params.apiKeyId,
     });
   } catch (error) {

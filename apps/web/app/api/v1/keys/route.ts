@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 import { generateApiKey } from '@/lib/api-key';
 import { authenticateRequest } from '@/lib/auth';
 
@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const { data: keys, error } = await supabase
-      .from('api_keys')
+    const { data: keys, error } = await getSupabaseClient()
+    .from('api_keys')
       .select(
         'id, name, key_prefix, environment, plan, requests_used, requests_limit, is_active, last_used_at, created_at, revoked_at, expires_at',
       )
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     const { fullKey, keyPrefix, keyHash } = generateApiKey(environment);
 
     // Get user's plan info for requests_limit
-    const { data: user } = await supabase
+    const { data: user } = await getSupabaseClient()
       .from('users')
       .select('plan, requests_limit')
       .eq('id', auth.userId)
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const requestsLimit = user?.requests_limit || 30000;
 
     // Store the hash (never the full key!)
-    const { data: newKey, error: insertError } = await supabase
+    const { data: newKey, error: insertError } = await getSupabaseClient()
       .from('api_keys')
       .insert({
         user_id: auth.userId,

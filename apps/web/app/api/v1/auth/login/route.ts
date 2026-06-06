@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 import crypto from 'crypto';
 
 function hashPassword(password: string): string {
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // Find user
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = await getSupabaseClient()
       .from('users')
       .select('id, email, plan, requests_limit')
       .eq('email', email.toLowerCase())
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const passwordHash = hashPassword(password);
 
     // Get API keys for this user
-    const { data: apiKeys } = await supabase
+    const { data: apiKeys } = await getSupabaseClient()
       .from('api_keys')
       .select('key_prefix, environment, is_active, created_at')
       .eq('user_id', user.id)

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 import { authenticateRequest } from '@/lib/auth';
 
 export async function DELETE(
@@ -25,7 +25,7 @@ export async function DELETE(
 
   try {
     // Verify the key belongs to the user
-    const { data: existingKey, error: lookupError } = await supabase
+    const { data: existingKey, error: lookupError } = await getSupabaseClient()
       .from('api_keys')
       .select('id, user_id')
       .eq('id', keyId)
@@ -50,7 +50,7 @@ export async function DELETE(
     }
 
     // Soft delete: set revoked_at instead of actually deleting
-    const { error: updateError } = await supabase
+    const { error: updateError } = await getSupabaseClient()
       .from('api_keys')
       .update({
         is_active: false,

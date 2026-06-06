@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 import { generateApiKey } from '@/lib/api-key';
 import crypto from 'crypto';
 
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // Check if user already exists
-    const { data: existingUser } = await supabase
+    const { data: existingUser } = await getSupabaseClient()
       .from('users')
       .select('id')
       .eq('email', email.toLowerCase())
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     // Create user
     const passwordHash = hashPassword(password);
-    const { data: newUser, error: userError } = await supabase
+    const { data: newUser, error: userError } = await getSupabaseClient()
       .from('users')
       .insert({
         email: email.toLowerCase(),
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     // Generate the first API key automatically
     const { fullKey, keyPrefix, keyHash: apiKeyHash } = generateApiKey('live');
 
-    const { error: keyError } = await supabase.from('api_keys').insert({
+    const { error: keyError } = await getSupabaseClient().from('api_keys').insert({
       user_id: newUser.id,
       key_hash: apiKeyHash,
       key_prefix: keyPrefix,

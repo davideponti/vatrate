@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
+import { createSession } from '@/lib/session';
 import crypto from 'crypto';
 
 function hashPassword(password: string): string {
   return crypto.createHash('sha256').update(password).digest('hex');
-}
-
-function generateToken(): string {
-  return crypto.randomBytes(32).toString('hex');
 }
 
 // POST /api/v1/auth/login
@@ -49,7 +46,6 @@ export async function POST(request: NextRequest) {
     // Verify password
     const passwordHash = hashPassword(password);
 
-    // For accounts created before password_hash was added, check if hash is empty
     if (!user.password_hash || user.password_hash !== passwordHash) {
       return NextResponse.json(
         { error: 'UNAUTHORIZED', message: 'Invalid email or password.', status: 401 },
@@ -67,8 +63,8 @@ export async function POST(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(1);
 
-    // Generate session token
-    const token = generateToken();
+    // Create web session token (valid for 7 days)
+    const sessionToken = await createSession(user.id);
 
     return NextResponse.json(
       {
@@ -79,7 +75,7 @@ export async function POST(request: NextRequest) {
           requests_limit: user.requests_limit,
         },
         api_keys: apiKeys || [],
-        token,
+        token: sessionToken,
       },
       { status: 200 },
     );

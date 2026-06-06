@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getSupabaseClient } from './supabase';
 import { extractKeyFromHeader, hashApiKey } from './api-key';
+import { getSession } from './session';
 
 export interface AuthResult {
   authenticated: boolean;
@@ -14,14 +15,9 @@ export interface AuthResult {
 }
 
 /**
- * Middleware to authenticate an API request using the Authorization header.
- *
- * Flow:
- * 1. Extract Bearer token from Authorization header
- * 2. Hash the key
- * 3. Look up the hash in Supabase
- * 4. Verify the key is active and hasn't exceeded rate limits
- * 5. Log the usage
+ * Authenticate a request using either an API key (external API calls)
+ * or a session token (web dashboard). Session tokens are identified
+ * by not matching the API key format (not starting with "vr_").
  *
  * Usage in API routes:
  * ```ts
@@ -33,11 +29,9 @@ export interface AuthResult {
  */
 export async function authenticateRequest(request: NextRequest): Promise<AuthResult> {
   const authHeader = request.headers.get('authorization');
-  const apiKey = extractKeyFromHeader(authHeader);
+  const bearerToken = extractKeyFromHeader(authHeader);
 
-  if (!apiKey) {
-    // If no valid API key, check if it's a free/unauthenticated request (IP-based rate limit)
-    // For now, return a specific error
+  if (!bearerToken) {
     return {
       authenticated: false,
       error:
@@ -47,11 +41,41 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
     };
   }
 
-  // Hash the key to look it up in the database
+  // Check if it's a session token (web dashboard) vs API key
+  // Session tokens are hex strings (64 chars), API keys start with "vr_"
+  if (!bearerToken.startsWith('vr_')) {
+    return await authenticateSession(bearerToken);
+  }
+
+  return await authenticateApiKey(bearerToken);
+}
+
+/**
+ * Authenticate using a web session token (from the dashboard).
+ */
+async function authenticateSession(token: string): Promise<AuthResult> {
+  const session = await getSession(token);
+  if (!session.valid) {
+    return {
+      authenticated: false,
+      error: session.error || 'Invalid session.',
+      status: session.status || 401,
+    };
+  }
+
+  return {
+    authenticated: true,
+    userId: session.userId!,
+  };
+}
+
+/**
+ * Authenticate using an API key (vr_live_... or vr_test_...).
+ */
+async function authenticateApiKey(apiKey: string): Promise<AuthResult> {
   const keyHash = hashApiKey(apiKey);
 
   try {
-    // Look up the key
     const { data: apiKeyData, error: lookupError } = await getSupabaseClient()
       .from('api_keys')
       .select('id, user_id, plan, requests_used, requests_limit, is_active, revoked_at, expires_at')
@@ -66,7 +90,6 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
       };
     }
 
-    // Check if key is active
     if (!apiKeyData.is_active || apiKeyData.revoked_at) {
       return {
         authenticated: false,
@@ -75,7 +98,6 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
       };
     }
 
-    // Check if key has expired
     if (apiKeyData.expires_at && new Date(apiKeyData.expires_at) < new Date()) {
       return {
         authenticated: false,
@@ -84,7 +106,6 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
       };
     }
 
-    // Check rate limit
     if (apiKeyData.requests_used >= apiKeyData.requests_limit) {
       return {
         authenticated: false,
@@ -128,7 +149,6 @@ export async function logUsage(params: {
   userAgent: string;
 }): Promise<void> {
   try {
-    // Hash the IP for privacy
     const { createHash } = await import('crypto');
     const ipHash = createHash('sha256').update(params.ip).digest('hex').substring(0, 16);
 
@@ -143,12 +163,10 @@ export async function logUsage(params: {
       user_agent: params.userAgent.substring(0, 255),
     });
 
-    // Increment the requests_used counter directly using the UUID
     await getSupabaseClient().rpc('increment_api_key_usage_by_id', {
       p_key_id: params.apiKeyId,
     });
   } catch (error) {
-    // Don't fail the request if logging fails
     console.error('Failed to log usage:', error);
   }
 }

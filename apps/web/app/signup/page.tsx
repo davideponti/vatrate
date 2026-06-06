@@ -38,7 +38,7 @@ export default function SignupPage() {
         return;
       }
 
-      // Store user and token
+      // Store user and session token
       localStorage.setItem('vatrate_user', data.user.email);
       localStorage.setItem('vatrate_token', data.token);
 

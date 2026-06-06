@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { generateApiKey } from '@/lib/api-key';
+import { createSession } from '@/lib/session';
 import crypto from 'crypto';
 
 function hashPassword(password: string): string {
   return crypto.createHash('sha256').update(password).digest('hex');
-}
-
-function generateToken(): string {
-  return crypto.randomBytes(32).toString('hex');
 }
 
 // POST /api/v1/auth/signup
@@ -83,9 +80,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate a token (in production, use proper JWT)
-    const token = generateToken();
-
     // Generate the first API key automatically
     const { fullKey, keyPrefix, keyHash: apiKeyHash } = generateApiKey('live');
 
@@ -103,6 +97,9 @@ export async function POST(request: NextRequest) {
       console.error('Failed to create API key:', keyError);
     }
 
+    // Create web session token (valid for 7 days)
+    const sessionToken = await createSession(newUser.id);
+
     return NextResponse.json(
       {
         user: {
@@ -111,7 +108,7 @@ export async function POST(request: NextRequest) {
           plan: newUser.plan,
         },
         api_key: fullKey, // 👈 One-time display
-        token,
+        token: sessionToken,
         message:
           'Account created successfully. Save your API key now — it will not be shown again.',
       },

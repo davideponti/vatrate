@@ -11,7 +11,10 @@
     "validate": "node apps/data/scripts/validate.mjs",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
   },
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "devDependencies": {
     "prettier": "^3.2.0",
     "turbo": "^2.9.16",
@@ -19,5 +22,8 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "nodemailer": "^8.0.10"
   }
 }

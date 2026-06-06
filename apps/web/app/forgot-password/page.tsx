@@ -8,13 +8,11 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [resetLink, setResetLink] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    setResetLink(null);
     setLoading(true);
 
     if (!email) {
@@ -32,8 +30,10 @@ export default function ForgotPasswordPage() {
 
       const data = await res.json();
 
-      if (data.reset_link) {
-        setResetLink(data.reset_link);
+      if (!res.ok) {
+        setError(data.message || 'Something went wrong.');
+        setLoading(false);
+        return;
       }
 
       setSuccess(
@@ -170,55 +170,6 @@ export default function ForgotPasswordPage() {
                 marginBottom: 16,
               }}>
               {success}
-            </div>
-          )}
-
-          {resetLink && (
-            <div
-              style={{
-                background: '#f0fdf4',
-                border: '2px solid #22c55e',
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 16,
-              }}>
-              <p
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: '#166534',
-                  margin: '0 0 8px',
-                }}>
-                🔗 Development reset link:
-              </p>
-              <a
-                href={resetLink}
-                style={{
-                  display: 'block',
-                  fontFamily: 'monospace',
-                  fontSize: 12,
-                  wordBreak: 'break-all',
-                  color: '#2563eb',
-                  marginBottom: 8,
-                }}>
-                {resetLink}
-              </a>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(resetLink);
-                }}
-                style={{
-                  padding: '6px 12px',
-                  background: '#22c55e',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 600,
-                }}>
-                Copy Link
-              </button>
             </div>
           )}
 

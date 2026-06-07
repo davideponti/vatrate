@@ -60,10 +60,21 @@ export function getOAuthProvider(provider: string): OAuthProvider {
 /**
  * Generate the redirect URI for a given provider.
  * This MUST match exactly what's registered in the OAuth app settings.
+ *
+ * Uses NEXT_PUBLIC_APP_URL first, then falls back to request URL detection
+ * for production environments.
  */
-export function getRedirectUri(provider: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  return `${baseUrl}/api/v1/auth/oauth/callback/${provider}`;
+export function getRedirectUri(provider: string, requestUrl?: string): string {
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (envUrl) {
+    return `${envUrl}/api/v1/auth/oauth/callback/${provider}`;
+  }
+  // Fallback: extract origin from the request URL (works in production)
+  if (requestUrl) {
+    const url = new URL(requestUrl);
+    return `${url.origin}/api/v1/auth/oauth/callback/${provider}`;
+  }
+  return `http://localhost:3000/api/v1/auth/oauth/callback/${provider}`;
 }
 
 /**
@@ -97,8 +108,9 @@ export function createAuthorizationUrl(provider: OAuthProvider): { url: string; 
 export async function exchangeCodeForToken(
   provider: OAuthProvider,
   code: string,
+  requestUrl?: string,
 ): Promise<{ access_token: string; [key: string]: unknown }> {
-  const redirectUri = getRedirectUri(provider.name);
+  const redirectUri = getRedirectUri(provider.name, requestUrl);
   const body = new URLSearchParams({
     client_id: provider.clientId,
     client_secret: provider.clientSecret,

@@ -53,8 +53,8 @@ export async function GET(
   try {
     const provider = getOAuthProvider(providerName);
 
-    // Exchange code for access token
-    const tokenData = await exchangeCodeForToken(provider, code);
+    // Exchange code for access token (pass request URL for redirect URI detection)
+    const tokenData = await exchangeCodeForToken(provider, code, request.url);
     const accessToken = tokenData.access_token as string;
 
     if (!accessToken) {

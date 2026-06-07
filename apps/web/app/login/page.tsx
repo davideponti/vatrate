@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import OAuthButtons from '@/components/oauth-buttons';
 
 const s = {
   page: { minHeight: '100vh', display: 'flex', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #f0f0ff 100%)' },
@@ -131,6 +132,8 @@ export default function LoginPage() {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
+
+          <OAuthButtons mode="login" />
 
           {needsVerification && (
             <div style={{textAlign: 'center', marginTop: 16}}>

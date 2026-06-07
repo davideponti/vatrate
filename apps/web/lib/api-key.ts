@@ -62,3 +62,34 @@ export function isValidKeyFormat(key: string): boolean {
 export function isTestKey(key: string): boolean {
   return key.startsWith('vr_test_');
 }
+
+/**
+ * Create a new API key for a user and store it in the database.
+ * Returns the full key (only available at creation time).
+ */
+export async function createApiKeyForUser(
+  userId: string,
+  name: string,
+  environment: 'live' | 'test' = 'live',
+): Promise<{ fullKey: string }> {
+  const { fullKey, keyPrefix, keyHash } = generateApiKey(environment);
+  
+  const { getSupabaseClient } = await import('./supabase');
+  const { error } = await getSupabaseClient().from('api_keys').insert({
+    user_id: userId,
+    key_hash: keyHash,
+    key_prefix: keyPrefix,
+    name,
+    environment,
+    plan: 'free',
+    requests_used: 0,
+    requests_limit: 30000,
+    is_active: true,
+  });
+
+  if (error) {
+    throw new Error(`Failed to create API key: ${error.message}`);
+  }
+
+  return { fullKey };
+}

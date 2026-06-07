@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import OAuthButtons from '@/components/oauth-buttons';
 
 const s = {
   page: { minHeight: '100vh', display: 'flex', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #f0f0ff 100%)' },
@@ -238,6 +239,8 @@ export default function SignupPage() {
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
+
+          <OAuthButtons mode="signup" />
 
           <p style={{textAlign: 'center', color: '#64748b', fontSize: 14, marginTop: 24}}>
             Already have an account?{' '}

@@ -248,7 +248,7 @@ export default function SignupPage() {
             <div style={{fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1}}>
               What you get
             </div>
-            {['3,000 API requests/month', 'All 27 EU countries', 'OSS threshold checker', 'Upcoming rate alerts'].map((f, i) => (
+            {['100 API requests/month', 'All 27 EU countries', 'OSS threshold checker', 'Upcoming rate alerts'].map((f, i) => (
               <div key={i} style={{fontSize: 14, color: '#64748b', padding: '4px 0', display: 'flex', alignItems: 'center', gap: 8}}>
                 <span style={{color: '#22c55e'}}>✓</span> {f}
               </div>
@@ -272,14 +272,14 @@ export default function SignupPage() {
               Free tier, seriously free
             </h3>
             <p style={{color: '#94a3b8', lineHeight: 1.7, margin: 0, fontSize: 15}}>
-              3,000 API requests per month at no cost. No credit card, no commitment. 
+              100 API requests per month at no cost. No credit card, no commitment. 
               Upgrade when you need more.
             </p>
             <div style={{
               marginTop: 24, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
             }}>
               {[
-                {val: '3,000', label: 'Requests/mo'},
+                {val: '100', label: 'Requests/mo'},
                 {val: '27', label: 'EU Countries'},
                 {val: '99.9%', label: 'Uptime'},
                 {val: '€0', label: 'To start'},

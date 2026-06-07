@@ -106,7 +106,7 @@ export default function DashboardPage() {
 
   const activeKeys = apiKeys.filter(k => k.is_active && !k.revoked_at);
   const totalUsed = apiKeys.reduce((s, k) => s + k.requests_used, 0);
-  const totalLimit = apiKeys[0]?.requests_limit || 3000;
+  const totalLimit = apiKeys[0]?.requests_limit || 100;
 
   return (
     <div style={{minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f8fafc', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>

@@ -483,7 +483,7 @@ export default function HomePage() {
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>Get started in minutes</h2>
         <p style={styles.sectionSub}>
-          No credit card required. Free tier with 3,000 requests/month.
+          No credit card required. Free tier with 100 requests/month.
         </p>
         <div style={styles.stepsContainer}>
           {[

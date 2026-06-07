@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
         if (user) {
           await getSupabaseClient()
             .from('users')
-            .update({ plan: 'free', requests_limit: 30000 })
+            .update({ plan: 'free', requests_limit: 100 })
             .eq('id', user.id);
 
           // Revoke all API keys for this user

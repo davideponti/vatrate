@@ -1,43 +1,59 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Pricing',
-  description: 'Simple, transparent pricing for EU VAT rates API. Free tier available.',
-};
+import Link from 'next/link';
+import { useState } from 'react';
 
 const plans = [
-  { name: 'Free', price: '€0', period: 'forever', desc: 'For developers exploring EU VAT.', features: ['JSON access via GitHub', '100 API requests/month', 'Community support', 'Open source data'], cta: 'Get Started', href: '/docs', highlighted: false },
-  { name: 'API Basic', price: '€19', period: '/month', desc: 'For startups and small projects.', features: ['3,000 API requests/month', 'Auto-updated rates', 'Email support', 'OSS threshold checker'], cta: 'Subscribe', href: '#', highlighted: true },
-  { name: 'API Pro', price: '€49', period: '/month', desc: 'For growing businesses.', features: ['10,000 API requests/month', 'Product classification', 'Rate alerts', 'Priority support'], cta: 'Subscribe', href: '#', highlighted: false },
-  { name: 'Enterprise', price: '€149', period: '/month', desc: 'For scale and compliance teams.', features: ['100,000 API requests/month', 'Country-specific alerts', 'Webhook integration', 'SLA 99.9%', 'Dedicated support'], cta: 'Contact Us', href: '#', highlighted: false },
+  { id: 'free', name: 'Free', price: '€0', period: 'forever', desc: 'For developers exploring EU VAT.', features: ['JSON access via GitHub', '100 API requests/month', 'Community support', 'Open source data'], cta: 'Get Started', href: '/docs', highlighted: false },
+  { id: 'basic', name: 'API Basic', price: '€19', period: '/month', desc: 'For startups and small projects.', features: ['3,000 API requests/month', 'Auto-updated rates', 'Email support', 'OSS threshold checker'], cta: 'Subscribe', href: '#', highlighted: true },
+  { id: 'pro', name: 'API Pro', price: '€49', period: '/month', desc: 'For growing businesses.', features: ['10,000 API requests/month', 'Product classification', 'Rate alerts', 'Priority support'], cta: 'Subscribe', href: '#', highlighted: false },
+  { id: 'enterprise', name: 'Enterprise', price: '€149', period: '/month', desc: 'For scale and compliance teams.', features: ['100,000 API requests/month', 'Country-specific alerts', 'Webhook integration', 'SLA 99.9%', 'Dedicated support'], cta: 'Contact Us', href: '#', highlighted: false },
 ];
 
-const h = { fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', padding: '20px 32px', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(229,231,235,0.5)', position: 'sticky' as const, top: 0, zIndex: 50 };
-const hi = { maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
-const hl = { fontSize: 22, fontWeight: 800, color: '#2563eb', textDecoration: 'none', letterSpacing: '-0.5px' };
-const hn = { display: 'flex', gap: 8, alignItems: 'center' };
-const hnl = { padding: '8px 16px', color: '#4b5563', textDecoration: 'none', fontSize: 14, fontWeight: 500, borderRadius: 8, transition: 'all 0.15s ease' };
-const hnl2 = { padding: '8px 16px', color: '#2563eb', textDecoration: 'none', fontSize: 14, fontWeight: 600, borderRadius: 8 };
-const btn = { padding: '10px 20px', background: '#2563eb', color: 'white', borderRadius: 10, textDecoration: 'none', fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer', boxShadow: '0 1px 3px rgba(37,99,235,0.3)' };
-const f = { borderTop: '1px solid #f1f5f9', padding: '48px 32px 32px', background: '#fafafa' };
-const fi = { maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' as const, gap: 32 };
-const fc = { display: 'flex', flexDirection: 'column' as const, gap: 8 };
-const ft = { fontSize: 13, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase' as const, letterSpacing: 1, marginBottom: 8 };
-const fl = { color: '#64748b', textDecoration: 'none', fontSize: 14 };
-const fb = { maxWidth: 1200, margin: '32px auto 0', paddingTop: 24, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' as const, gap: 12, fontSize: 13, color: '#94a3b8' };
-
 export default function PricingPage() {
+  const [loading, setLoading] = useState<string | null>(null);
+  const [error, setError] = useState('');
+
+  const handleSubscribe = async (planId: string) => {
+    setLoading(planId);
+    setError('');
+
+    const token = localStorage.getItem('vatrate_token');
+    if (!token) {
+      window.location.href = '/login?redirect=/pricing';
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/v1/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ plan: planId }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.redirect_url) {
+        window.location.href = data.redirect_url;
+      } else {
+        setError(data.message || data.error || 'Failed to start checkout.');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    }
+    setLoading(null);
+  };
+
   return (
     <div style={{minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
-      <header style={h}>
-        <div style={hi}>
-          <Link href="/" style={hl}>VAT<span style={{color: '#1e293b'}}>Rate</span></Link>
-          <nav style={hn}>
-            <Link href="/docs" style={hnl}>Docs</Link>
-            <Link href="/pricing" style={hnl2}>Pricing</Link>
-            <Link href="/login" style={hnl}>Sign In</Link>
-            <Link href="/signup" style={btn}>Sign Up Free</Link>
+      <header style={{padding: '20px 32px', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(229,231,235,0.5)', position: 'sticky', top: 0, zIndex: 50}}>
+        <div style={{maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+          <Link href="/" style={{fontSize: 22, fontWeight: 800, color: '#2563eb', textDecoration: 'none', letterSpacing: '-0.5px'}}>VAT<span style={{color: '#1e293b'}}>Rate</span></Link>
+          <nav style={{display: 'flex', gap: 8, alignItems: 'center'}}>
+            <Link href="/docs" style={{padding: '8px 16px', color: '#4b5563', textDecoration: 'none', fontSize: 14, fontWeight: 500, borderRadius: 8}}>Docs</Link>
+            <Link href="/pricing" style={{padding: '8px 16px', color: '#2563eb', textDecoration: 'none', fontSize: 14, fontWeight: 600, borderRadius: 8}}>Pricing</Link>
+            <Link href="/login" style={{padding: '8px 16px', color: '#4b5563', textDecoration: 'none', fontSize: 14, fontWeight: 500, borderRadius: 8}}>Sign In</Link>
+            <Link href="/signup" style={{padding: '10px 20px', background: '#2563eb', color: 'white', borderRadius: 10, textDecoration: 'none', fontSize: 14, fontWeight: 600, boxShadow: '0 1px 3px rgba(37,99,235,0.3)'}}>Sign Up Free</Link>
             <a href="https://github.com/davideponti/vatrate" target="_blank" style={{padding: '8px 16px', background: '#f3f4f6', color: '#1e293b', borderRadius: 8, textDecoration: 'none', fontSize: 14, fontWeight: 600}}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{marginRight: 4, verticalAlign: 'middle'}}><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
               GitHub
@@ -56,6 +72,12 @@ export default function PricingPage() {
             Free to start. Pay as you grow. No hidden fees.
           </p>
         </div>
+
+        {error && (
+          <div style={{maxWidth: 600, margin: '0 auto 24px', textAlign: 'center', background: '#fef2f2', color: '#dc2626', padding: '12px 16px', borderRadius: 10, fontSize: 14, border: '1px solid #fecaca'}}>
+            {error}
+          </div>
+        )}
 
         <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 24}}>
           {plans.map(plan => (
@@ -79,18 +101,39 @@ export default function PricingPage() {
               <ul style={{listStyle: 'none', padding: 0, margin: '0 0 32px', flex: 1}}>
                 {plan.features.map(f => (
                   <li key={f} style={{padding: '6px 0', fontSize: 14, display: 'flex', alignItems: 'center', gap: 8}}>
-                    <span style={{color: plan.highlighted ? '#22c55e' : '#22c55e'}}>✓</span> {f}
+                    <span style={{color: '#22c55e'}}>✓</span> {f}
                   </li>
                 ))}
               </ul>
-              <a href={plan.href} style={{
-                display: 'block', textAlign: 'center', padding: '12px', borderRadius: 10,
-                background: plan.highlighted ? 'white' : '#2563eb',
-                color: plan.highlighted ? '#0f172a' : 'white', textDecoration: 'none', fontWeight: 600, fontSize: 15,
-                boxShadow: plan.highlighted ? 'none' : '0 4px 14px rgba(37,99,235,0.3)',
-              }}>
-                {plan.cta}
-              </a>
+              {plan.id === 'free' ? (
+                <Link href={plan.href} style={{
+                  display: 'block', textAlign: 'center', padding: '12px', borderRadius: 10,
+                  background: '#2563eb', color: 'white', textDecoration: 'none', fontWeight: 600, fontSize: 15,
+                  boxShadow: '0 4px 14px rgba(37,99,235,0.3)',
+                }}>
+                  {plan.cta}
+                </Link>
+              ) : plan.id === 'enterprise' ? (
+                <a href="mailto:hello@vatrate.eu" style={{
+                  display: 'block', textAlign: 'center', padding: '12px', borderRadius: 10,
+                  background: plan.highlighted ? 'white' : '#2563eb',
+                  color: plan.highlighted ? '#0f172a' : 'white', textDecoration: 'none', fontWeight: 600, fontSize: 15,
+                  boxShadow: plan.highlighted ? 'none' : '0 4px 14px rgba(37,99,235,0.3)',
+                }}>
+                  {plan.cta}
+                </a>
+              ) : (
+                <button onClick={() => handleSubscribe(plan.id)} disabled={loading === plan.id} style={{
+                  display: 'block', textAlign: 'center', padding: '12px', borderRadius: 10, width: '100%',
+                  background: plan.highlighted ? 'white' : '#2563eb',
+                  color: plan.highlighted ? '#0f172a' : 'white', textDecoration: 'none', fontWeight: 600, fontSize: 15,
+                  border: 'none', cursor: loading === plan.id ? 'not-allowed' : 'pointer',
+                  boxShadow: plan.highlighted ? 'none' : '0 4px 14px rgba(37,99,235,0.3)',
+                  opacity: loading === plan.id ? 0.7 : 1,
+                }}>
+                  {loading === plan.id ? 'Redirecting...' : plan.cta}
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -102,25 +145,25 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <footer style={f}>
-        <div style={fi}>
-          <div style={fc}>
+      <footer style={{borderTop: '1px solid #f1f5f9', padding: '48px 32px 32px', background: '#fafafa'}}>
+        <div style={{maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 32}}>
+          <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
             <div style={{fontSize: 18, fontWeight: 800, color: '#2563eb', marginBottom: 8}}>VATRate</div>
             <p style={{color: '#64748b', fontSize: 14, margin: 0, maxWidth: 240, lineHeight: 1.6}}>Open-source EU VAT rates API for developers.</p>
           </div>
-          <div style={fc}>
-            <div style={ft}>Product</div>
-            <Link href="/docs" style={fl}>Documentation</Link>
-            <Link href="/pricing" style={fl}>Pricing</Link>
-            <a href="https://github.com/davideponti/vatrate" target="_blank" style={fl}>GitHub</a>
+          <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
+            <div style={{fontSize: 13, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8}}>Product</div>
+            <Link href="/docs" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Documentation</Link>
+            <Link href="/pricing" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Pricing</Link>
+            <a href="https://github.com/davideponti/vatrate" target="_blank" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>GitHub</a>
           </div>
-          <div style={fc}>
-            <div style={ft}>Company</div>
-            <a href="mailto:hello@vatrate.eu" style={fl}>Contact</a>
-            <a href="https://github.com/davideponti/vatrate/issues" target="_blank" style={fl}>Report Issue</a>
+          <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
+            <div style={{fontSize: 13, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8}}>Company</div>
+            <a href="mailto:hello@vatrate.eu" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Contact</a>
+            <a href="https://github.com/davideponti/vatrate/issues" target="_blank" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Report Issue</a>
           </div>
         </div>
-        <div style={fb}>
+        <div style={{maxWidth: 1200, margin: '32px auto 0', paddingTop: 24, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, fontSize: 13, color: '#94a3b8'}}>
           <span>© 2026 VATRate. Open source EU VAT data.</span>
           <span>Made with ❤️ for developers.</span>
         </div>

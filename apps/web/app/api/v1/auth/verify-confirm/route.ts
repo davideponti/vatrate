@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
+import crypto from 'crypto';
+import { rateLimitByIp } from '@/lib/rate-limit';
+
+/**
+ * Hash the verification code for comparison (must match verify-send).
+ */
+function hashCode(code: string): string {
+  return crypto.createHash('sha256').update(code).digest('hex');
+}
 
 // POST /api/v1/auth/verify-confirm
 export async function POST(request: NextRequest) {
+  // Rate limit: 10 verification attempts per minute per IP (brute-force protection)
+  const rateLimitResponse = await rateLimitByIp(request, { max: 10, windowSeconds: 60 });
+  if (rateLimitResponse) return rateLimitResponse;
+
   let body: { email?: string; code?: string };
   try {
     body = await request.json();
@@ -23,17 +36,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Find user
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Find user - don't reveal if user exists
     const { data: user } = await getSupabaseClient()
       .from('users')
-      .select('id, email_verified, verification_code, verification_expires_at')
-      .eq('email', email.toLowerCase())
+      .select('id, email_verified, verification_code, verification_expires_at, failed_login_attempts')
+      .eq('email', normalizedEmail)
       .single();
 
     if (!user) {
       return NextResponse.json(
-        { error: 'NOT_FOUND', message: 'User not found.', status: 404 },
-        { status: 404 },
+        { error: 'INVALID_CODE', message: 'Invalid verification code.', status: 400 },
+        { status: 400 },
       );
     }
 
@@ -41,14 +56,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { message: 'Email already verified.' },
         { status: 200 },
-      );
-    }
-
-    // Check if code matches
-    if (user.verification_code !== code) {
-      return NextResponse.json(
-        { error: 'INVALID_CODE', message: 'Invalid verification code.', status: 400 },
-        { status: 400 },
       );
     }
 
@@ -60,6 +67,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Hash the provided code and compare with stored hash
+    const codeHash = hashCode(code);
+
+    if (user.verification_code !== codeHash) {
+      // Increment failed attempts for audit
+      const newAttempts = (user.failed_login_attempts || 0) + 1;
+      await getSupabaseClient()
+        .from('users')
+        .update({ failed_login_attempts: newAttempts })
+        .eq('id', user.id);
+
+      return NextResponse.json(
+        { error: 'INVALID_CODE', message: 'Invalid verification code.', status: 400 },
+        { status: 400 },
+      );
+    }
+
     // Mark email as verified and clear code
     const { error: updateError } = await getSupabaseClient()
       .from('users')
@@ -67,6 +91,7 @@ export async function POST(request: NextRequest) {
         email_verified: true,
         verification_code: null,
         verification_expires_at: null,
+        failed_login_attempts: 0,
       })
       .eq('id', user.id);
 

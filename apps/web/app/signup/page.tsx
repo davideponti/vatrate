@@ -101,7 +101,7 @@ export default function SignupPage() {
       const loginData = await loginRes.json();
 
       if (loginRes.ok) {
-        localStorage.setItem('vatrate_user', loginData.user.email);
+        localStorage.setItem('vatrate_user', loginData.user?.email || createdEmail);
         localStorage.setItem('vatrate_token', loginData.token);
         router.push('/dashboard');
       } else {

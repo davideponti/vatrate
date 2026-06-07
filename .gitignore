@@ -7,4 +7,9 @@ dist
 .DS_Store
 coverage
 .turbo
+
+# Internal audit files (not for public repo)
+SECURITY.md
+audit-completo.md
+security-audit.md
 .vercel

@@ -36,9 +36,9 @@ export async function POST(request: NextRequest) {
       }, { status: 200 });
     }
 
-    const stripe = await import('stripe');
-    const stripeClient = new stripe.default(stripeSecretKey, {
-      apiVersion: '2025-02-24.acacia' as any,
+    const { default: Stripe } = await import('stripe');
+    const stripeClient = new Stripe(stripeSecretKey, {
+      apiVersion: '2026-05-27.dahlia',
     });
 
     let stripeCustomerId = user.stripe_customer_id;

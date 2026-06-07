@@ -15,6 +15,24 @@ export interface AuthResult {
 }
 
 /**
+ * Validate password strength consistently across the app.
+ * Min 8 chars, at least 1 uppercase, 1 lowercase, 1 number.
+ */
+export function isValidPassword(password: string): boolean {
+  return password.length >= 8 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password);
+}
+
+/**
+ * Sanitize a string for database storage - removes HTML tags to prevent stored XSS.
+ */
+function sanitize(value: string, maxLength: number = 255): string {
+  return value
+    .replace(/<[^>]*>/g, '') // Strip HTML tags
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '') // Strip control characters
+    .substring(0, maxLength);
+}
+
+/**
  * Authenticate a request using either an API key (external API calls)
  * or a session token (web dashboard). Session tokens are identified
  * by not matching the API key format (not starting with "vr_").
@@ -137,6 +155,7 @@ async function authenticateApiKey(apiKey: string): Promise<AuthResult> {
 
 /**
  * Log an API request usage.
+ * IP addresses are hashed for privacy (GDPR compliance).
  */
 export async function logUsage(params: {
   apiKeyId: string;
@@ -152,6 +171,9 @@ export async function logUsage(params: {
     const { createHash } = await import('crypto');
     const ipHash = createHash('sha256').update(params.ip).digest('hex').substring(0, 16);
 
+    // Sanitize user-agent before storage to prevent XSS
+    const sanitizedUserAgent = sanitize(params.userAgent, 255);
+
     // Log to usage_logs for stats
     await getSupabaseClient().from('usage_logs').insert({
       api_key_id: params.apiKeyId,
@@ -161,18 +183,19 @@ export async function logUsage(params: {
       country: params.country || null,
       status: params.status,
       ip_hash: ipHash,
-      user_agent: params.userAgent.substring(0, 255),
+      user_agent: sanitizedUserAgent,
     });
 
     // Log to api_logs for the logs page
+    // IP is hashed for GDPR compliance (same hash used in usage_logs)
     await getSupabaseClient().from('api_logs').insert({
       api_key_id: params.apiKeyId,
       user_id: params.userId,
       method: params.method,
       path: params.endpoint,
       status_code: params.status,
-      ip_address: params.ip,
-      user_agent: params.userAgent.substring(0, 255),
+      ip_address: ipHash, // Hashed IP for GDPR compliance (was previously stored in plaintext)
+      user_agent: sanitizedUserAgent,
       response_time_ms: null,
     });
 

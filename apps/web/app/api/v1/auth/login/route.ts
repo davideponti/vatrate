@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
+import { verifyPassword } from '@/lib/password';
 import { createSession } from '@/lib/session';
-import crypto from 'crypto';
-
-function hashPassword(password: string): string {
-  return crypto.createHash('sha256').update(password).digest('hex');
-}
+import { rateLimitByIp } from '@/lib/rate-limit';
+import { isValidPassword } from '@/lib/auth';
+import { generateCsrfToken, setCsrfCookie } from '@/lib/csrf';
 
 // POST /api/v1/auth/login
 export async function POST(request: NextRequest) {
+  // Rate limit: 10 login attempts per minute per IP
+  const rateLimitResponse = await rateLimitByIp(request, { max: 10, windowSeconds: 60 });
+  if (rateLimitResponse) return rateLimitResponse;
+
+
   let body: { email?: string; password?: string };
   try {
     body = await request.json();
@@ -29,69 +33,101 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Find user (include password_hash for verification)
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Find user by email
     const { data: user, error: userError } = await getSupabaseClient()
       .from('users')
-      .select('id, email, plan, requests_limit, password_hash, email_verified')
-      .eq('email', email.toLowerCase())
+      .select('id, email, password_hash, email_verified, plan, failed_login_attempts, locked_until')
+      .eq('email', normalizedEmail)
       .single();
 
-    if (userError || !user) {
+    if (userError || !user || !user.password_hash) {
+      // Return generic error to not reveal if email exists
       return NextResponse.json(
-        { error: 'UNAUTHORIZED', message: 'Invalid email or password.', status: 401 },
+        { error: 'INVALID_CREDENTIALS', message: 'Invalid email or password.', status: 401 },
         { status: 401 },
       );
     }
 
-    // Verify password
-    const passwordHash = hashPassword(password);
-
-    if (!user.password_hash || user.password_hash !== passwordHash) {
-      return NextResponse.json(
-        { error: 'UNAUTHORIZED', message: 'Invalid email or password.', status: 401 },
-        { status: 401 },
+    // Check if account is locked
+    if (user.locked_until && new Date(user.locked_until) > new Date()) {
+      const remainingMinutes = Math.ceil(
+        (new Date(user.locked_until).getTime() - Date.now()) / 60000,
       );
-    }
-
-    // Check if email is verified
-    if (!user.email_verified) {
       return NextResponse.json(
         {
-          error: 'EMAIL_NOT_VERIFIED',
-          message: 'Please verify your email before signing in. Check your inbox for a verification code.',
-          status: 403,
-          email_verified: false,
+          error: 'ACCOUNT_LOCKED',
+          message: `Account temporarily locked. Try again in ${remainingMinutes} minute(s).`,
+          status: 429,
         },
-        { status: 403 },
+        { status: 429 },
       );
     }
 
-    // Get API keys for this user
-    const { data: apiKeys } = await getSupabaseClient()
-      .from('api_keys')
-      .select('key_prefix, environment, is_active, created_at')
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-      .is('revoked_at', null)
-      .order('created_at', { ascending: false })
-      .limit(1);
+    // Verify password with bcrypt
+    const isValid = await verifyPassword(password, user.password_hash);
 
-    // Create web session token (valid for 7 days)
-    const sessionToken = await createSession(user.id);
+    if (!isValid) {
+      // Increment failed attempts
+      const newAttempts = (user.failed_login_attempts || 0) + 1;
+      const lockMinutes = Math.min(15 * Math.pow(2, newAttempts - 5), 60);
+      const lockUntil =
+        newAttempts >= 5
+          ? new Date(Date.now() + lockMinutes * 60 * 1000).toISOString()
+          : null;
 
-    return NextResponse.json(
+      await getSupabaseClient()
+        .from('users')
+        .update({
+          failed_login_attempts: newAttempts,
+          locked_until: lockUntil,
+        })
+        .eq('id', user.id);
+
+      return NextResponse.json(
+        { error: 'INVALID_CREDENTIALS', message: 'Invalid email or password.', status: 401 },
+        { status: 401 },
+      );
+    }
+
+    // Reset failed attempts on successful login
+    await getSupabaseClient()
+      .from('users')
+      .update({ failed_login_attempts: 0, locked_until: null })
+      .eq('id', user.id);
+
+    // Create session
+    const token = await createSession(user.id);
+
+    // Determine redirect based on plan and verification
+    let redirectTo = '/dashboard';
+
+    const response = NextResponse.json(
       {
-        user: {
-          id: user.id,
-          email: user.email,
-          plan: user.plan,
-          requests_limit: user.requests_limit,
-        },
-        api_keys: apiKeys || [],
-        token: sessionToken,
+        message: 'Login successful.',
+        redirect_to: redirectTo,
+        user: { email: user.email },
+        token,
       },
       { status: 200 },
     );
+
+    // Set session cookie (sameSite: 'strict' prevents CSRF)
+    response.cookies.set('session', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    });
+
+    // Set CSRF token cookie for dashboard API protection
+    const csrfToken = generateCsrfToken();
+    setCsrfCookie(response, csrfToken);
+
+    return response;
+
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(

@@ -2,17 +2,38 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { sendEmail } from '@/lib/email';
 import crypto from 'crypto';
+import { rateLimitByIp } from '@/lib/rate-limit';
 
-function hashToken(token: string): string {
-  return crypto.createHash('sha256').update(token).digest('hex');
-}
+const ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'https://vatrate.eu',
+  'https://www.vatrate.eu',
+  'https://vatrate.vercel.app',
+];
 
-function generateResetToken(): string {
-  return crypto.randomBytes(32).toString('hex');
+function getValidOrigin(request: NextRequest): string {
+  const origin = request.headers.get('origin');
+  const host = request.headers.get('host') || 'vatrate.eu';
+
+  // First check if origin is in allowed list
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    return origin;
+  }
+  // Then check host header
+  if (host.includes('localhost') || host.includes('vatrate.eu') || host.includes('vercel.app')) {
+    return `https://${host}`;
+  }
+  // Safe default
+  return 'https://vatrate.eu';
 }
 
 // POST /api/v1/auth/forgot-password
 export async function POST(request: NextRequest) {
+  // Rate limit: 3 requests per minute per IP
+  const rateLimitResponse = await rateLimitByIp(request, { max: 3, windowSeconds: 60 });
+  if (rateLimitResponse) return rateLimitResponse;
+
+
   let body: { email?: string };
   try {
     body = await request.json();
@@ -33,104 +54,72 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Find user
-    const { data: user, error: userError } = await getSupabaseClient()
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Find user by email (don't reveal if user exists)
+    const { data: user } = await getSupabaseClient()
       .from('users')
-      .select('id, email')
-      .eq('email', email.toLowerCase())
+      .select('id')
+      .eq('email', normalizedEmail)
       .single();
 
-    // For security, always return success even if email not found
-    if (userError || !user) {
+    if (!user) {
+      // Return success anyway to not reveal if email exists
       return NextResponse.json(
-        {
-          message:
-            'If an account with that email exists, a password reset link has been sent.',
-        },
+        { message: 'If an account with that email exists, a password reset link has been sent.' },
         { status: 200 },
       );
     }
 
-    // Generate reset token (valid for 1 hour)
-    const resetToken = generateResetToken();
-    const tokenHash = hashToken(resetToken);
+    // Generate reset token
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
 
-    // Delete any existing unused tokens for this user
-    await getSupabaseClient()
-      .from('password_reset_tokens')
-      .delete()
-      .eq('user_id', user.id)
-      .is('used_at', null);
+    // Store token hash in DB
+    await getSupabaseClient().from('password_reset_tokens').insert({
+      user_id: user.id,
+      token_hash: tokenHash,
+      expires_at: expiresAt,
+    });
 
-    // Store the new token hash
-    const { error: insertError } = await getSupabaseClient()
-      .from('password_reset_tokens')
-      .insert({
-        user_id: user.id,
-        token_hash: tokenHash,
-        expires_at: expiresAt,
-      });
+    // Build reset link with token as query parameter (NOT in URL path)
+    // per ridurre esposizione in log server, cronologia browser e Referer header
+    const origin = getValidOrigin(request);
+    const resetLink = `${origin}/reset-password?token=${rawToken}`;
 
-    if (insertError) {
-      console.error('Failed to store reset token:', insertError);
-      return NextResponse.json(
-        { error: 'INTERNAL_ERROR', message: 'An unexpected error occurred.', status: 500 },
-        { status: 500 },
-      );
-    }
+    // Send email
+    await sendEmail({
+      to: normalizedEmail,
+      subject: 'Reset your VATRate password',
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+          <h2 style="color: #2563eb;">Reset your password</h2>
+          <p style="color: #374151; font-size: 16px; line-height: 1.5;">
+            You requested a password reset for your VATRate account. Click the button below to reset your password:
+          </p>
+          <a href="${resetLink}" style="
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 24px 0;
+          ">Reset Password</a>
+          <p style="color: #6b7280; font-size: 14px;">
+            This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email.
+          </p>
+        </div>
+      `,
+    });
 
-    // Build reset link
-    const origin = request.headers.get('origin') || 'https://vatrate.eu';
-    const resetLink = `${origin}/reset-password/${resetToken}`;
-
-    // Try to send email via SMTP
-    let emailSent = false;
-    try {
-      await sendEmail({
-        type: 'transactional',
-        to: user.email,
-        subject: 'Reset your VATRate password',
-        html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
-            <div style="font-size: 28px; font-weight: 700; color: #2563eb; margin-bottom: 24px;">VATRate</div>
-            <h1 style="font-size: 22px; font-weight: 700; margin: 0 0 8px; color: #1a1a2e;">Reset your password</h1>
-            <p style="color: #6b7280; font-size: 15px; line-height: 1.6; margin: 0 0 24px;">
-              You requested a password reset for your VATRate account. Click the button below to set a new password. This link expires in 1 hour.
-            </p>
-            <a href="${resetLink}" style="display: inline-block; padding: 14px 28px; background: #2563eb; color: white; text-decoration: none; border-radius: 10px; font-size: 16px; font-weight: 600; margin-bottom: 24px;">
-              Reset Password
-            </a>
-            <p style="color: #9ca3af; font-size: 13px; line-height: 1.5; margin: 0 0 8px;">
-              Or copy and paste this link into your browser:
-            </p>
-            <p style="color: #6b7280; font-size: 13px; word-break: break-all; font-family: monospace; background: #f9fafb; padding: 12px; border-radius: 8px; margin: 0 0 24px;">
-              ${resetLink}
-            </p>
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-            <p style="color: #9ca3af; font-size: 13px; margin: 0;">
-              If you didn't request this password reset, you can safely ignore this email.
-            </p>
-          </div>
-        `,
-      });
-      emailSent = true;
-      console.log(`📧 Password reset email sent to ${user.email}`);
-    } catch (emailError) {
-      console.error('Failed to send password reset email:', emailError);
-    }
-
-    const response: Record<string, string> = {
-      message:
-        'If an account with that email exists, a password reset link has been sent.',
-    };
-
-    // In dev or if SMTP is not configured, return the reset link directly
-    if (!emailSent) {
-      response.reset_link = resetLink;
-    }
-
-    return NextResponse.json(response, { status: 200 });
+    return NextResponse.json(
+      { message: 'If an account with that email exists, a password reset link has been sent.' },
+      { status: 200 },
+    );
   } catch (error) {
     console.error('Forgot password error:', error);
     return NextResponse.json(

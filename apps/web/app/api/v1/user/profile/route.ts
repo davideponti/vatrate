@@ -63,7 +63,6 @@ export async function GET(request: NextRequest) {
         plan_price: plan.price,
         requests_limit: totalLimit,
         requests_used: totalUsed,
-        stripe_customer_id: user.stripe_customer_id || null,
         created_at: user.created_at,
         updated_at: user.updated_at,
       },

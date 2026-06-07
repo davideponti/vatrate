@@ -27,8 +27,10 @@
   // Style
   container.style.display = 'inline-block';
 
-  // Fetch rate
-  fetch('/api/v1/rate?country=' + country + '&type=' + type + '&customer=consumer')
+  // Fetch rate - URL assoluto per funzionare da qualsiasi dominio
+  var apiBase = 'https://vatrate.eu';
+  fetch(apiBase + '/api/v1/rate?country=' + encodeURIComponent(country) + '&type=' + encodeURIComponent(type) + '&customer=consumer')
+
     .then(function (res) { return res.json(); })
     .then(function (data) {
       var isDark = theme === 'dark';

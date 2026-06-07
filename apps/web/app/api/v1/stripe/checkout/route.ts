@@ -52,9 +52,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const stripe = await import('stripe');
-    const stripeClient = new stripe.default(stripeSecretKey, {
-      apiVersion: '2025-02-24.acacia' as any,
+    const { default: Stripe } = await import('stripe');
+    const stripeClient = new Stripe(stripeSecretKey, {
+      apiVersion: '2026-05-27.dahlia',
     });
 
     // Get user info

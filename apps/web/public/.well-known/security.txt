@@ -1,0 +1,17 @@
+# Security Contact
+# Per segnalare vulnerabilità di sicurezza, contattare:
+Contact: mailto:security@vatrate.eu
+Contact: https://vatrate.eu/security
+
+# Disclosure Policy
+# Le vulnerabilità vengono gestite secondo la policy di responsible disclosure.
+# Ci impegniamo a rispondere entro 72 ore.
+
+# Expiry
+Expires: 2027-06-07T00:00:00.000Z
+
+# Preferred languages
+Preferred-Languages: en, it
+
+# Canonical URL
+Canonical: https://vatrate.eu/.well-known/security.txt

@@ -2,13 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { sendEmail } from '@/lib/email';
 import crypto from 'crypto';
+import { rateLimitByIp, rateLimitByEmail } from '@/lib/rate-limit';
 
 function generateVerificationCode(): string {
   return crypto.randomInt(100000, 999999).toString();
 }
 
+/**
+ * Hash the verification code before storing it in DB.
+ * Prevents exposure of the plain code if the DB is compromised.
+ */
+function hashCode(code: string): string {
+  return crypto.createHash('sha256').update(code).digest('hex');
+}
+
 // POST /api/v1/auth/verify-send
 export async function POST(request: NextRequest) {
+  // Rate limit: 3 verification emails per minute per IP
+  const rateLimitIpResponse = await rateLimitByIp(request, { max: 3, windowSeconds: 60 });
+  if (rateLimitIpResponse) return rateLimitIpResponse;
+
   let body: { email?: string };
   try {
     body = await request.json();
@@ -29,45 +42,53 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Find user
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Rate limit by email (3 per 5 minutes)
+    const rateLimitEmailResponse = await rateLimitByEmail(normalizedEmail, { max: 3, windowSeconds: 300 });
+    if (rateLimitEmailResponse) return rateLimitEmailResponse;
+
+    // Find user - don't reveal if user exists (same as forgot-password)
     const { data: user } = await getSupabaseClient()
       .from('users')
       .select('id, email_verified')
-      .eq('email', email.toLowerCase())
+      .eq('email', normalizedEmail)
       .single();
 
     if (!user) {
+      // Return generic success to prevent user enumeration
       return NextResponse.json(
-        { error: 'NOT_FOUND', message: 'User not found.', status: 404 },
-        { status: 404 },
+        { message: 'If an account with that email exists, a verification code has been sent.' },
+        { status: 200 },
       );
     }
 
     if (user.email_verified) {
       return NextResponse.json(
-        { message: 'Email already verified.' },
+        { message: 'If an account with that email exists, a verification code has been sent.' },
         { status: 200 },
       );
     }
 
     // Generate verification code (valid for 15 minutes)
     const code = generateVerificationCode();
+    const codeHash = hashCode(code);
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
-    // Store code in database
+    // Store HASHED code in database (not plaintext)
     const { error: updateError } = await getSupabaseClient()
       .from('users')
       .update({
-        verification_code: code,
+        verification_code: codeHash, // now hashed
         verification_expires_at: expiresAt,
       })
       .eq('id', user.id);
 
     if (updateError) throw updateError;
 
-    // Send verification email
+    // Send verification email with plaintext code (user needs to read it)
     await sendEmail({
-      to: email,
+      to: normalizedEmail,
       subject: 'Verify your VATRate account',
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
@@ -99,7 +120,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { message: 'Verification code sent.', expires_at: expiresAt },
+      { message: 'If an account with that email exists, a verification code has been sent.' },
       { status: 200 },
     );
   } catch (error) {

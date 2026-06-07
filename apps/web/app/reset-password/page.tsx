@@ -1,13 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
 
-export default function ResetPasswordPage() {
-  const params = useParams();
+function ResetPasswordForm() {
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const token = params.token as string;
+  const token = searchParams.get('token') || '';
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -145,7 +145,43 @@ export default function ResetPasswordPage() {
             padding: 40,
             border: '1px solid #e5e7eb',
           }}>
-          {success ? (
+          {!token ? (
+            <>
+              <div
+                style={{ fontSize: 48, textAlign: 'center', marginBottom: 16 }}>
+                🔗
+              </div>
+              <h1
+                style={{
+                  fontSize: 24,
+                  fontWeight: 800,
+                  margin: '0 0 8px',
+                  textAlign: 'center',
+                }}>
+                Invalid Reset Link
+              </h1>
+              <p
+                style={{
+                  color: '#6b7280',
+                  fontSize: 15,
+                  textAlign: 'center',
+                  margin: '0 0 24px',
+                }}>
+                This password reset link is missing or invalid. Please request a new one.
+              </p>
+              <div style={{ textAlign: 'center' }}>
+                <Link
+                  href="/forgot-password"
+                  style={{
+                    color: '#2563eb',
+                    fontWeight: 600,
+                    fontSize: 15,
+                  }}>
+                  Request new reset link
+                </Link>
+              </div>
+            </>
+          ) : success ? (
             <>
               <div
                 style={{ fontSize: 48, textAlign: 'center', marginBottom: 16 }}>
@@ -310,5 +346,23 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#f9fafb',
+      }}>
+        <p style={{ color: '#6b7280', fontSize: 16 }}>Loading...</p>
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

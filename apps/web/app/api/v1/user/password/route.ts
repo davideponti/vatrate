@@ -1,23 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
-import { authenticateRequest } from '@/lib/auth';
-import crypto from 'crypto';
+import { verifyPassword, hashPassword } from '@/lib/password';
+import { authenticateRequest, isValidPassword } from '@/lib/auth';
+import { validateCsrf } from '@/lib/csrf';
 
-function hashPassword(password: string): string {
-  return crypto.createHash('sha256').update(password).digest('hex');
-}
-
-// PATCH /api/v1/user/password
-export async function PATCH(request: NextRequest) {
+// PUT /api/v1/user/password
+export async function PUT(request: NextRequest) {
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
     return NextResponse.json(
       { error: 'UNAUTHORIZED', message: auth.error, status: auth.status },
-      { status: auth.status },
+      { status: auth.status! },
     );
   }
 
-  let body: { current_password?: string; new_password?: string };
+  // CSRF protection for session-based requests (not API key requests)
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer vr_')) {
+    const csrfError = validateCsrf(request);
+    if (csrfError) return csrfError;
+  }
+
+
+
+  let body: { currentPassword?: string; newPassword?: string };
   try {
     body = await request.json();
   } catch {
@@ -27,63 +33,87 @@ export async function PATCH(request: NextRequest) {
     );
   }
 
-  const { current_password, new_password } = body;
+  const { currentPassword, newPassword } = body;
 
-  if (!current_password || !new_password) {
+  if (!currentPassword || !newPassword) {
     return NextResponse.json(
-      { error: 'VALIDATION_ERROR', message: 'Current password and new password are required.', status: 400 },
+      {
+        error: 'VALIDATION_ERROR',
+        message: 'Current password and new password are required.',
+        status: 400,
+      },
       { status: 400 },
     );
   }
 
-  if (new_password.length < 8) {
+  if (!isValidPassword(newPassword)) {
     return NextResponse.json(
-      { error: 'VALIDATION_ERROR', message: 'New password must be at least 8 characters.', status: 400 },
+      {
+        error: 'VALIDATION_ERROR',
+        message: 'New password must be at least 8 characters with uppercase, lowercase, and a number.',
+        status: 400,
+      },
       { status: 400 },
     );
   }
 
   try {
-    // Get current user's password hash
+    // Get user's current password hash
     const { data: user, error: userError } = await getSupabaseClient()
       .from('users')
       .select('password_hash')
       .eq('id', auth.userId)
       .single();
 
-    if (userError || !user) {
+    if (userError || !user?.password_hash) {
       return NextResponse.json(
         { error: 'NOT_FOUND', message: 'User not found.', status: 404 },
         { status: 404 },
       );
     }
 
-    // Verify current password
-    const currentHash = hashPassword(current_password);
-    if (user.password_hash !== currentHash) {
+    // Verify current password with bcrypt
+    const isValid = await verifyPassword(currentPassword, user.password_hash);
+    if (!isValid) {
       return NextResponse.json(
-        { error: 'INVALID_PASSWORD', message: 'Current password is incorrect.', status: 403 },
-        { status: 403 },
+        { error: 'INVALID_PASSWORD', message: 'Current password is incorrect.', status: 401 },
+        { status: 401 },
       );
     }
 
+    // Hash new password with bcrypt
+    const newPasswordHash = await hashPassword(newPassword);
+
     // Update password
-    const newHash = hashPassword(new_password);
     const { error: updateError } = await getSupabaseClient()
       .from('users')
-      .update({ password_hash: newHash })
+      .update({
+        password_hash: newPasswordHash,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', auth.userId);
 
     if (updateError) throw updateError;
 
-    // Expire all sessions except current one
-    await getSupabaseClient()
-      .from('sessions')
-      .delete()
-      .eq('user_id', auth.userId);
+    // Invalidate all sessions except current
+    const sessionToken = request.cookies.get('session')?.value;
+    if (sessionToken) {
+      const crypto = await import('crypto');
+      const currentTokenHash = crypto.default
+        .createHash('sha256')
+        .update(sessionToken)
+        .digest('hex');
+
+      // Delete all sessions for user except current one
+      await getSupabaseClient()
+        .from('sessions')
+        .delete()
+        .eq('user_id', auth.userId)
+        .neq('token_hash', currentTokenHash);
+    }
 
     return NextResponse.json(
-      { message: 'Password updated successfully. Please sign in again.' },
+      { message: 'Password updated successfully.' },
       { status: 200 },
     );
   } catch (error) {

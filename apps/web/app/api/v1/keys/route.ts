@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { generateApiKey } from '@/lib/api-key';
 import { authenticateRequest } from '@/lib/auth';
+import { rateLimitBySession } from '@/lib/rate-limit';
 
 export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request);
@@ -41,6 +42,10 @@ export async function POST(request: NextRequest) {
       { status: auth.status },
     );
   }
+
+  // Rate limit: max 10 API key creations per hour per session
+  const rateLimitResponse = await rateLimitBySession(request, { max: 10, windowSeconds: 3600 });
+  if (rateLimitResponse) return rateLimitResponse;
 
   let body: { name?: string; environment?: string };
   try {

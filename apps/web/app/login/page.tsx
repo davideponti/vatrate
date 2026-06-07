@@ -82,7 +82,7 @@ export default function LoginPage() {
         return;
       }
 
-      localStorage.setItem('vatrate_user', data.user.email);
+      localStorage.setItem('vatrate_user', data.user?.email || email);
       localStorage.setItem('vatrate_token', data.token);
       router.push('/dashboard');
     } catch {

@@ -1,26 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Stripe from 'stripe';
 import { getSupabaseClient } from '@/lib/supabase';
 import { generateApiKey } from '@/lib/api-key';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2023-10-16',
+});
 
 /**
  * Stripe webhook handler.
  * Processes subscription events to manage API keys.
  */
 export async function POST(request: NextRequest) {
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+  const body = await request.text();
+  const signature = request.headers.get('stripe-signature');
+
+  if (!signature) {
+    return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 });
   }
 
-  const eventType = body.type;
+  let event: Stripe.Event;
+  try {
+    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
+  } catch (err) {
+    console.error('Invalid Stripe signature:', err);
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+  }
+
+  const eventType = event.type;
 
   switch (eventType) {
     case 'checkout.session.completed': {
-      const session = body.data.object;
+      const session = event.data.object as Stripe.Checkout.Session;
       const email = session.customer_email;
-      const stripeCustomerId = session.customer;
+      const stripeCustomerId = session.customer as string;
       const plan = session.metadata?.plan || 'basic';
 
       console.log(`✅ Checkout completed: ${session.id} for ${email}`);
@@ -40,15 +53,15 @@ export async function POST(request: NextRequest) {
 
         let userId: string;
 
+        const limits: Record<string, number> = {
+          basic: 1000,
+          pro: 10000,
+          enterprise: 100000,
+          widget: 50000,
+        };
+
         if (existingUser) {
           userId = existingUser.id;
-          // Update user's plan
-          const limits: Record<string, number> = {
-            basic: 1000,
-            pro: 10000,
-            enterprise: 100000,
-            widget: 50000,
-          };
           await getSupabaseClient()
             .from('users')
             .update({
@@ -58,7 +71,6 @@ export async function POST(request: NextRequest) {
             })
             .eq('id', userId);
         } else {
-          // Create new user (with email_verified=true since they paid via Stripe)
           const { data: newUser } = await getSupabaseClient()
             .from('users')
             .insert({
@@ -79,13 +91,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Generate and store API key
-        const { fullKey, keyPrefix, keyHash } = generateApiKey('live');
-        const limits: Record<string, number> = {
-          basic: 1000,
-          pro: 10000,
-          enterprise: 100000,
-          widget: 50000,
-        };
+        const { keyPrefix, keyHash } = generateApiKey('live');
 
         await getSupabaseClient().from('api_keys').insert({
           user_id: userId,
@@ -97,7 +103,6 @@ export async function POST(request: NextRequest) {
           requests_limit: limits[plan] || 1000,
         });
 
-        // TODO: Send email to user with their API key
         console.log(`🔑 API key generated for ${email}: ${keyPrefix}...`);
       } catch (error) {
         console.error('Failed to process checkout:', error);
@@ -106,16 +111,15 @@ export async function POST(request: NextRequest) {
     }
 
     case 'invoice.paid': {
-      const invoice = body.data.object;
-      const stripeCustomerId = invoice.customer;
+      const invoice = event.data.object as Stripe.Invoice;
+      const scId = invoice.customer as string;
       console.log(`💰 Invoice paid: ${invoice.id}`);
 
-      // Update user's status (reset usage, extend expiration, etc.)
       try {
         await getSupabaseClient()
           .from('users')
           .update({ updated_at: new Date().toISOString() })
-          .eq('stripe_customer_id', stripeCustomerId);
+          .eq('stripe_customer_id', scId);
       } catch (error) {
         console.error('Failed to update invoice status:', error);
       }
@@ -123,16 +127,15 @@ export async function POST(request: NextRequest) {
     }
 
     case 'customer.subscription.deleted': {
-      const subscription = body.data.object;
-      const stripeCustomerId = subscription.customer;
+      const subscription = event.data.object as Stripe.Subscription;
+      const scId = subscription.customer as string;
       console.log(`❌ Subscription deleted: ${subscription.id}`);
 
-      // Downgrade user to free plan
       try {
         const { data: user } = await getSupabaseClient()
           .from('users')
           .select('id')
-          .eq('stripe_customer_id', stripeCustomerId)
+          .eq('stripe_customer_id', scId)
           .single();
 
         if (user) {
@@ -141,7 +144,6 @@ export async function POST(request: NextRequest) {
             .update({ plan: 'free', requests_limit: 100 })
             .eq('id', user.id);
 
-          // Revoke all API keys for this user
           await getSupabaseClient()
             .from('api_keys')
             .update({ is_active: false, revoked_at: new Date().toISOString() })
@@ -160,3 +162,9 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ received: true }, { status: 200 });
 }
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};

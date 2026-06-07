@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import OAuthButtons from '@/components/oauth-buttons';
 
@@ -28,6 +28,25 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
   const router = useRouter();
+
+  // Read error from URL params (e.g. OAuth errors)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlError = params.get('error');
+    if (urlError) {
+      const messages: Record<string, string> = {
+        oauth_not_configured: 'OAuth is not configured. Please contact support.',
+        unsupported_provider: 'Unsupported login provider.',
+        oauth_error: 'Failed to initiate OAuth login.',
+        csrf_detected: 'Security check failed. Please try again.',
+        invalid_request: 'Invalid OAuth request.',
+        email_required: 'Email is required from the provider.',
+        account_creation_failed: 'Failed to create account.',
+        oauth_callback_error: 'OAuth login failed. Please try again.',
+      };
+      setError(messages[urlError] || `Login failed: ${urlError}`);
+    }
+  });
 
   const handleResendVerification = async () => {
     setLoading(true);

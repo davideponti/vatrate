@@ -104,31 +104,57 @@ export async function GET(
         .eq('id', userId);
     } else {
       // New user: create account
+      // Try with OAuth columns first, fall back without them if migration isn't applied
       const displayName = oauthUser.name || oauthUser.email.split('@')[0];
 
-      const { data: newUser, error: createError } = await getSupabaseClient()
-        .from('users')
-        .insert({
-          email: oauthUser.email,
-          oauth_provider: providerName,
-          oauth_id: oauthUser.id,
-          avatar_url: oauthUser.avatar_url,
-          display_name: displayName,
-          email_verified: true, // OAuth providers verify emails
-          plan: 'free',
-          requests_limit: 30000,
-        })
-        .select('id')
-        .single();
+      const insertPayload: Record<string, unknown> = {
+        email: oauthUser.email,
+        email_verified: true,
+        plan: 'free',
+        requests_limit: 30000,
+      };
 
-      if (createError || !newUser) {
-        console.error('Failed to create user:', createError);
-        return NextResponse.redirect(
-          new URL('/signup?error=account_creation_failed', request.url),
-        );
+      // Try to add OAuth-specific columns (may fail if migration 00007 not applied)
+      try {
+        insertPayload.oauth_provider = providerName;
+        insertPayload.oauth_id = oauthUser.id;
+        insertPayload.avatar_url = oauthUser.avatar_url;
+        insertPayload.display_name = displayName;
+
+        const { data: newUser, error: createError } = await getSupabaseClient()
+          .from('users')
+          .insert(insertPayload)
+          .select('id')
+          .single();
+
+        if (createError || !newUser) {
+          throw createError || new Error('No user returned');
+        }
+
+        userId = newUser.id;
+      } catch {
+        // Fallback: create user without OAuth columns (migration not applied)
+        console.warn('OAuth columns not found in DB, falling back to basic user creation');
+        const { data: fallbackUser, error: fallbackError } = await getSupabaseClient()
+          .from('users')
+          .insert({
+            email: oauthUser.email,
+            email_verified: true,
+            plan: 'free',
+            requests_limit: 30000,
+          })
+          .select('id')
+          .single();
+
+        if (fallbackError || !fallbackUser) {
+          console.error('Failed to create user (fallback):', fallbackError);
+          return NextResponse.redirect(
+            new URL('/signup?error=account_creation_failed', request.url),
+          );
+        }
+
+        userId = fallbackUser.id;
       }
-
-      userId = newUser.id;
 
       // Create default API key for new OAuth user
       await createApiKeyForUser(userId, 'Default', 'live').catch((err: Error) => {

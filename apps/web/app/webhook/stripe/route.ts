@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
 import { getSupabaseClient } from '@/lib/supabase';
 import { generateApiKey } from '@/lib/api-key';
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || '';
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
-const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2026-05-27.dahlia',
-});
+async function getStripeClient(): Promise<Stripe> {
+  const { default: Stripe } = await import('stripe');
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY || '';
+  return new Stripe(stripeSecretKey, {
+    apiVersion: '2026-05-27.dahlia',
+  });
+}
 
 
 /** Allowed metadata keys for plan */
@@ -51,7 +54,8 @@ export async function POST(request: NextRequest) {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    const stripeClient = await getStripeClient();
+    event = stripeClient.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
     console.error('Invalid Stripe signature:', err);
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
@@ -187,9 +191,3 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ received: true }, { status: 200 });
 }
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};

@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { authenticateRequest } from '@/lib/auth';
+import { ERR, apiSuccess } from '@/lib/api-helpers';
 
 export async function DELETE(
   request: NextRequest,
@@ -8,19 +9,13 @@ export async function DELETE(
 ) {
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return NextResponse.json(
-      { error: 'UNAUTHORIZED', message: auth.error, status: auth.status },
-      { status: auth.status },
-    );
+    return ERR.UNAUTHORIZED();
   }
 
   const { id: keyId } = await params;
 
   if (!keyId) {
-    return NextResponse.json(
-      { error: 'VALIDATION_ERROR', message: 'API key ID is required.', status: 400 },
-      { status: 400 },
-    );
+    return ERR.VALIDATION('API key ID is required.');
   }
 
   try {
@@ -32,21 +27,11 @@ export async function DELETE(
       .single();
 
     if (lookupError || !existingKey) {
-      return NextResponse.json(
-        { error: 'NOT_FOUND', message: 'API key not found.', status: 404 },
-        { status: 404 },
-      );
+      return ERR.NOT_FOUND('API key not found.');
     }
 
     if (existingKey.user_id !== auth.userId) {
-      return NextResponse.json(
-        {
-          error: 'FORBIDDEN',
-          message: 'You can only revoke your own API keys.',
-          status: 403,
-        },
-        { status: 403 },
-      );
+      return ERR.FORBIDDEN('You can only revoke your own API keys.');
     }
 
     // Soft delete: set revoked_at instead of actually deleting
@@ -60,15 +45,9 @@ export async function DELETE(
 
     if (updateError) throw updateError;
 
-    return NextResponse.json(
-      { message: 'API key revoked successfully.' },
-      { status: 200 },
-    );
+    return apiSuccess({ message: 'API key revoked successfully.' });
   } catch (error) {
     console.error('Failed to revoke API key:', error);
-    return NextResponse.json(
-      { error: 'INTERNAL_ERROR', message: 'Failed to revoke API key.', status: 500 },
-      { status: 500 },
-    );
+    return ERR.INTERNAL('Failed to revoke API key.');
   }
 }

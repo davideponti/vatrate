@@ -1,54 +1,45 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { resolveRate } from '@vatrate/api';
 import { z } from 'zod';
+import { PRODUCT_TYPES } from '@vatrate/shared';
 import { authenticateRequest, logUsage } from '@/lib/auth';
+import { ERR, apiSuccess, extractClientInfo } from '@/lib/api-helpers';
 
 const querySchema = z.object({
   country: z.string().min(2).max(2),
-  type: z.string().optional(),
+  type: z.enum(PRODUCT_TYPES).optional(),
   customer: z.enum(['business', 'consumer']).optional(),
   vat_number: z.string().optional(),
 });
 
 export async function GET(request: NextRequest) {
-  // Authenticate
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return NextResponse.json(
-      { error: 'UNAUTHORIZED', message: auth.error, status: auth.status },
-      { status: auth.status! },
-    );
+    return ERR.UNAUTHORIZED();
   }
 
   const { searchParams } = new URL(request.url);
   const params = {
     country: searchParams.get('country') || '',
-    type: searchParams.get('type') || undefined,
-    customer: searchParams.get('customer') || undefined,
+    type: (searchParams.get('type') as z.infer<typeof querySchema>['type']) || undefined,
+    customer: (searchParams.get('customer') as z.infer<typeof querySchema>['customer']) || undefined,
     vat_number: searchParams.get('vat_number') || undefined,
   };
 
   const parsed = querySchema.safeParse(params);
   if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'VALIDATION_ERROR',
-        message:
-          'Invalid parameters. Required: country (2-letter code). Optional: type, customer, vat_number.',
-        status: 400,
-        docs: 'https://vatrate.eu/docs/api-reference',
-      },
-      { status: 400 },
+    return ERR.VALIDATION(
+      'Invalid parameters. Required: country (2-letter code). Optional: type, customer, vat_number.',
+      'https://vatrate.eu/docs/api-reference',
     );
   }
 
-  const params2 = parsed.data as Parameters<typeof resolveRate>[0];
-  const result = resolveRate(params2);
-
+  const result = resolveRate(parsed.data);
   const status = 'error' in result ? result.status : 200;
 
   // Log usage asynchronously
-  if (auth.authenticated && auth.apiKeyId && auth.userId) {
+  if (auth.apiKeyId && auth.userId) {
+    const client = extractClientInfo(request);
     logUsage({
       apiKeyId: auth.apiKeyId,
       userId: auth.userId,
@@ -56,19 +47,16 @@ export async function GET(request: NextRequest) {
       method: 'GET',
       country: params.country,
       status,
-      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
+      ip: client.ip,
+      userAgent: client.userAgent,
     }).catch(console.error);
   }
 
   if ('error' in result) {
-    return NextResponse.json(result, { status: result.status });
+    return ERR.VALIDATION(result.error, 'https://vatrate.eu/docs/api-reference');
   }
 
-  return NextResponse.json(result, {
-    status: 200,
-    headers: {
-      'Cache-Control': 'public, max-age=300, s-maxage=600',
-    },
+  return apiSuccess(result, 200, {
+    'Cache-Control': 'public, max-age=300, s-maxage=600',
   });
 }

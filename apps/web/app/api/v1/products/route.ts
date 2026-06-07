@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { classifyProduct, getCountryData } from '@vatrate/api';
 import { z } from 'zod';
 import { authenticateRequest, logUsage } from '@/lib/auth';
+import { ERR, apiSuccess, extractClientInfo } from '@/lib/api-helpers';
 
 const bodySchema = z.object({
   country: z.string().min(2).max(2),
@@ -9,46 +10,31 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  // Authenticate
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return NextResponse.json(
-      { error: 'UNAUTHORIZED', message: auth.error, status: auth.status },
-      { status: auth.status! },
-    );
+    return ERR.UNAUTHORIZED();
   }
 
-  let body;
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
-      {
-        error: 'VALIDATION_ERROR',
-        message: 'Invalid JSON body.',
-        status: 400,
-      },
-      { status: 400 },
-    );
+    return ERR.VALIDATION('Invalid JSON body.');
   }
 
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: 'VALIDATION_ERROR',
-        message: parsed.error.issues.map((i) => i.message).join(', '),
-        status: 400,
-      },
-      { status: 400 },
+    return ERR.VALIDATION(
+      parsed.error.issues.map((i) => i.message).join(', '),
     );
   }
 
-  const countryData = getCountryData(parsed.data.country);
+  const countryData = getCountryData(parsed.data.country) ?? undefined;
   const result = classifyProduct(parsed.data.description, countryData);
 
   // Log usage asynchronously
-  if (auth.authenticated && auth.apiKeyId && auth.userId) {
+  if (auth.apiKeyId && auth.userId) {
+    const client = extractClientInfo(request);
     logUsage({
       apiKeyId: auth.apiKeyId,
       userId: auth.userId,
@@ -56,12 +42,10 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       country: parsed.data.country,
       status: 200,
-      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
+      ip: client.ip,
+      userAgent: client.userAgent,
     }).catch(console.error);
   }
 
-  return NextResponse.json(result, {
-    status: 200,
-  });
+  return apiSuccess(result);
 }

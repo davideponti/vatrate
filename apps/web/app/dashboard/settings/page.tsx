@@ -98,9 +98,9 @@ export default function SettingsPage() {
     setPasswordLoading(true);
     try {
       const res = await fetch('/api/v1/user/password', {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+        body: JSON.stringify({ currentPassword, newPassword }),
       });
 
       const data = await res.json();

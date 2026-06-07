@@ -3,19 +3,17 @@ import { getSupabaseClient } from '@/lib/supabase';
 import { generateApiKey } from '@/lib/api-key';
 import { authenticateRequest } from '@/lib/auth';
 import { rateLimitBySession } from '@/lib/rate-limit';
+import { ERR, apiSuccess } from '@/lib/api-helpers';
 
 export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return NextResponse.json(
-      { error: 'UNAUTHORIZED', message: auth.error, status: auth.status },
-      { status: auth.status },
-    );
+    return ERR.UNAUTHORIZED();
   }
 
   try {
     const { data: keys, error } = await getSupabaseClient()
-    .from('api_keys')
+      .from('api_keys')
       .select(
         'id, name, key_prefix, environment, plan, requests_used, requests_limit, is_active, last_used_at, created_at, revoked_at, expires_at',
       )
@@ -24,23 +22,17 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
-    return NextResponse.json({ keys }, { status: 200 });
+    return apiSuccess({ keys });
   } catch (error) {
     console.error('Failed to fetch API keys:', error);
-    return NextResponse.json(
-      { error: 'INTERNAL_ERROR', message: 'Failed to fetch API keys.', status: 500 },
-      { status: 500 },
-    );
+    return ERR.INTERNAL('Failed to fetch API keys.');
   }
 }
 
 export async function POST(request: NextRequest) {
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return NextResponse.json(
-      { error: 'UNAUTHORIZED', message: auth.error, status: auth.status },
-      { status: auth.status },
-    );
+    return ERR.UNAUTHORIZED();
   }
 
   // Rate limit: max 10 API key creations per hour per session
@@ -101,9 +93,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error('Failed to generate API key:', error);
-    return NextResponse.json(
-      { error: 'INTERNAL_ERROR', message: 'Failed to generate API key.', status: 500 },
-      { status: 500 },
-    );
+    return ERR.INTERNAL('Failed to generate API key.');
   }
 }

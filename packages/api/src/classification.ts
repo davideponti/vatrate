@@ -1,4 +1,4 @@
-import type { ProductType, ProductClassificationResponse } from '@vatrate/shared';
+import type { ProductType, VatMechanism, CountryVatData, ProductClassificationResponse } from '@vatrate/shared';
 
 /**
  * Simple keyword-based product classification.
@@ -32,12 +32,20 @@ const KEYWORDS: Record<string, { type: ProductType; classification: string; conf
   download: { type: 'digital_services', classification: 'digital_service', confidence: 0.80 },
 };
 
+/** Shape of a product entry for rate lookups during classification */
+interface RateEntry {
+  rate: number;
+  mechanism: VatMechanism;
+  condition?: string;
+  threshold_oss?: { amount: number; currency: string; note?: string };
+}
+
 /**
  * Classify a product description into a VAT product type.
  */
 export function classifyProduct(
   description: string,
-  countryRateData?: any,
+  countryRateData?: CountryVatData,
 ): ProductClassificationResponse {
   const lower = description.toLowerCase();
   let bestMatch = {
@@ -55,17 +63,21 @@ export function classifyProduct(
   }
 
   // If we have country rate data, include actual rates
-  const countryCode = countryRateData?.code || '';
-  const productEntry = countryRateData?.[bestMatch.type] || countryRateData?.digital_services;
+  const productEntry = (countryRateData as unknown as Record<string, unknown>)?.[bestMatch.type] as
+    | { b2b?: RateEntry; b2c?: RateEntry }
+    | undefined;
+  const fallbackEntry = countryRateData?.digital_services as { b2b?: RateEntry; b2c?: RateEntry } | undefined;
+
+  const entry = productEntry || fallbackEntry;
 
   const b2b = {
-    rate: productEntry?.b2b?.rate ?? 0,
-    mechanism: productEntry?.b2b?.mechanism ?? 'reverse_charge' as any,
+    rate: entry?.b2b?.rate ?? 0,
+    mechanism: entry?.b2b?.mechanism ?? 'reverse_charge' as VatMechanism,
   };
 
   const b2c = {
-    rate: productEntry?.b2c?.rate ?? 20,
-    mechanism: productEntry?.b2c?.mechanism ?? 'standard' as any,
+    rate: entry?.b2c?.rate ?? 20,
+    mechanism: entry?.b2c?.mechanism ?? 'standard' as VatMechanism,
   };
 
   return {

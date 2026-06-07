@@ -6,6 +6,7 @@ import type {
   RateResponse,
   OssThresholdInfo,
 } from '@vatrate/shared';
+import type { VatMechanism } from '@vatrate/shared';
 import {
   COUNTRY_NAMES,
   COUNTRY_CURRENCIES,
@@ -38,6 +39,14 @@ export function getDatabaseMeta() {
   };
 }
 
+/** Shape of a product entry in the JSON data */
+interface ProductEntry {
+  classification?: string;
+  b2b?: { rate: number; mechanism: VatMechanism; condition?: string };
+  b2c?: { rate: number; mechanism: VatMechanism; threshold_oss?: OssThresholdInfo };
+  note?: string;
+}
+
 /**
  * Resolve the appropriate rate for a given query.
  */
@@ -57,16 +66,11 @@ export function resolveRate(params: RateQueryParams): RateResponse | { error: st
   const customerType = params.customer || 'consumer';
 
   // Find the right product entry
-  const productEntry = countryData[productType as keyof CountryVatData] as {
-    classification?: string;
-    b2b?: { rate: number; mechanism: string; condition?: string };
-    b2c?: { rate: number; mechanism: string; threshold_oss?: OssThresholdInfo };
-    note?: string;
-  } | null;
+  const productEntry = countryData[productType as keyof CountryVatData] as ProductEntry | string | undefined;
 
   if (!productEntry || typeof productEntry === 'string') {
     // Fallback to digital_services for unknown product types
-    const fallback = countryData.digital_services;
+    const fallback = countryData.digital_services as ProductEntry;
     return buildRateResponse(countryData, productType, customerType, fallback, params.vat_number);
   }
 
@@ -77,7 +81,7 @@ function buildRateResponse(
   countryData: CountryVatData,
   productType: string,
   customerType: string,
-  productEntry: any,
+  productEntry: ProductEntry,
   vatNumber?: string,
 ): RateResponse {
   const isBusiness = customerType === 'business';
@@ -90,7 +94,7 @@ function buildRateResponse(
       product_type: productType,
       customer_type: customerType,
       rate: countryData.vat.standard,
-      mechanism: 'standard',
+      mechanism: 'standard' as VatMechanism,
       currency: countryData.currency,
       note: `No specific ${customerType} rate for ${productType}. Defaulting to standard rate.`,
       valid_from: countryData.valid_from,
@@ -104,7 +108,7 @@ function buildRateResponse(
     product_type: productType,
     customer_type: customerType,
     rate: rateInfo.rate,
-    mechanism: rateInfo.mechanism as any,
+    mechanism: rateInfo.mechanism,
     currency: countryData.currency,
     note: productEntry.note || `Rate: ${rateInfo.rate}% (${rateInfo.mechanism})`,
     valid_from: countryData.valid_from,
@@ -121,7 +125,9 @@ function buildRateResponse(
 
   // OSS info for B2C — check the product entry first, then fall back to digital_services
   if (!isBusiness) {
-    const ossInfo = rateInfo.threshold_oss || countryData.digital_services?.b2c?.threshold_oss;
+    const b2cInfo = rateInfo as { rate: number; mechanism: VatMechanism; threshold_oss?: OssThresholdInfo };
+    const digitalServicesB2C = countryData.digital_services?.b2c;
+    const ossInfo = b2cInfo.threshold_oss || digitalServicesB2C?.threshold_oss;
     if (ossInfo) {
       response.oss_applicable = true;
       response.oss_threshold = {
@@ -151,8 +157,8 @@ export function getCountryRates(countryCode: string) {
   const ratesByType: Record<string, number> = {};
 
   for (const type of productTypes) {
-    const entry = countryData[type as keyof CountryVatData] as any;
-    if (entry && entry.b2b && entry.b2c) {
+    const entry = countryData[type as keyof CountryVatData] as ProductEntry | string | undefined;
+    if (entry && typeof entry !== 'string' && entry.b2b && entry.b2c) {
       ratesByType[`${type}_b2b`] = entry.b2b.rate;
       ratesByType[`${type}_b2c`] = entry.b2c.rate;
     }

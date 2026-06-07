@@ -1,40 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { checkOssThreshold } from '@vatrate/api';
+import type { OssThresholdRequest } from '@vatrate/shared';
 import { z } from 'zod';
 import { authenticateRequest, logUsage } from '@/lib/auth';
+import { ERR, apiSuccess, extractClientInfo } from '@/lib/api-helpers';
 
 const querySchema = z.object({
   home_country: z.string().min(2).max(2),
 });
 
 export async function GET(request: NextRequest) {
-  // Authenticate
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return NextResponse.json(
-      { error: 'UNAUTHORIZED', message: auth.error, status: auth.status },
-      { status: auth.status! },
-    );
+    return ERR.UNAUTHORIZED();
   }
 
   const { searchParams } = new URL(request.url);
   const homeCountry = searchParams.get('home_country');
 
   if (!homeCountry) {
-    return NextResponse.json(
-      {
-        error: 'VALIDATION_ERROR',
-        message:
-          'Required: home_country (2-letter code, e.g., ?home_country=IT)',
-        status: 400,
-        docs: 'https://vatrate.eu/docs/api-reference',
-      },
-      { status: 400 },
+    return ERR.VALIDATION(
+      'Required: home_country (2-letter code, e.g., ?home_country=IT)',
+      'https://vatrate.eu/docs/api-reference',
     );
   }
 
-  // Build params from all sales_* query params
-  const params: Record<string, string | number> = {
+  // Build typed params from all sales_* query params
+  const params: OssThresholdRequest = {
     home_country: homeCountry,
   };
 
@@ -47,10 +39,11 @@ export async function GET(request: NextRequest) {
     }
   });
 
-  const result = checkOssThreshold(params as any);
+  const result = checkOssThreshold(params);
 
   // Log usage asynchronously
-  if (auth.authenticated && auth.apiKeyId && auth.userId) {
+  if (auth.apiKeyId && auth.userId) {
+    const client = extractClientInfo(request);
     logUsage({
       apiKeyId: auth.apiKeyId,
       userId: auth.userId,
@@ -58,12 +51,10 @@ export async function GET(request: NextRequest) {
       method: 'GET',
       country: homeCountry,
       status: 200,
-      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
+      ip: client.ip,
+      userAgent: client.userAgent,
     }).catch(console.error);
   }
 
-  return NextResponse.json(result, {
-    status: 200,
-  });
+  return apiSuccess(result);
 }

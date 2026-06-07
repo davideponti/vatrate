@@ -38,12 +38,22 @@ export default function LogsPage() {
   useEffect(() => {
     const t = localStorage.getItem('vatrate_token');
     if (!t) { router.push('/login'); return; }
-    fetchKeys(t); fetchLogs(t);
+    fetchKeys(t);
+    fetchLogs(t);
   }, [router]);
 
-  const fetchKeys = async (t: string) => { try { const r = await fetch('/api/v1/keys', { headers: { Authorization: `Bearer ${t}` } }); if (r.ok) setKeys((await r.json()).keys || []); } catch {} };
+  const fetchKeys = async (t: string) => {
+    try {
+      const r = await fetch('/api/v1/keys', { headers: { Authorization: `Bearer ${t}` } });
+      if (r.ok) setKeys((await r.json()).keys || []);
+    } catch {
+      // Silently fail - keys filter will just be empty
+    }
+  };
+
   const fetchLogs = async (t: string, o = 0) => {
-    setLoading(true); setError('');
+    setLoading(true);
+    setError('');
     try {
       let u = `/api/v1/logs?limit=${P}&offset=${o}`;
       if (selKey) u += `&key_id=${selKey}`;
@@ -51,16 +61,24 @@ export default function LogsPage() {
       if (r.status === 401) { localStorage.clear(); router.push('/login'); return; }
       if (r.ok) { const d = await r.json(); setLogs(d.logs || []); setTotal(d.total || 0); setOffset(o); }
       else { const d = await r.json(); setError(d.message || 'Failed to fetch logs'); }
-    } catch { setError('Failed to fetch logs.'); }
+    } catch {
+      setError('Failed to fetch logs.');
+    }
     setLoading(false);
   };
 
   const doFilter = (id: string) => {
-    setSelKey(id); const t = localStorage.getItem('vatrate_token'); if (!t) return;
-    setOffset(0); setLoading(true);
+    setSelKey(id);
+    const t = localStorage.getItem('vatrate_token');
+    if (!t) return;
+    setOffset(0);
+    setLoading(true);
     let u = `/api/v1/logs?limit=${P}&offset=0`;
     if (id) u += `&key_id=${id}`;
-    fetch(u, { headers: { Authorization: `Bearer ${t}` } }).then(r => r.json()).then(d => { setLogs(d.logs || []); setTotal(d.total || 0); setLoading(false); }).catch(() => setLoading(false));
+    fetch(u, { headers: { Authorization: `Bearer ${t}` } })
+      .then(r => r.json())
+      .then(d => { setLogs(d.logs || []); setTotal(d.total || 0); setLoading(false); })
+      .catch(() => setLoading(false));
   };
 
   const logout = () => { localStorage.clear(); router.push('/'); };

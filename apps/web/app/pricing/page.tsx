@@ -1,49 +1,33 @@
-'use client';
-
 import Link from 'next/link';
-import { useState } from 'react';
 
 const plans = [
-  { id: 'free', name: 'Free', price: '€0', period: 'forever', desc: 'For developers exploring EU VAT.', features: ['JSON access via GitHub', '100 API requests/month', 'Community support', 'Open source data'], cta: 'Get Started', href: '/docs', highlighted: false },
-  { id: 'basic', name: 'API Basic', price: '€19', period: '/month', desc: 'For startups and small projects.', features: ['3,000 API requests/month', 'Auto-updated rates', 'Email support', 'OSS threshold checker'], cta: 'Subscribe', href: '#', highlighted: true },
-  { id: 'pro', name: 'API Pro', price: '€49', period: '/month', desc: 'For growing businesses.', features: ['10,000 API requests/month', 'Product classification', 'Rate alerts', 'Priority support'], cta: 'Subscribe', href: '#', highlighted: false },
-  { id: 'enterprise', name: 'Enterprise', price: '€149', period: '/month', desc: 'For scale and compliance teams.', features: ['100,000 API requests/month', 'Country-specific alerts', 'Webhook integration', 'SLA 99.9%', 'Dedicated support'], cta: 'Contact Us', href: '#', highlighted: false },
+  {
+    id: 'free', name: 'Free', price: '€0', period: 'forever',
+    desc: 'For developers exploring EU VAT.',
+    features: ['JSON access via GitHub', '100 API requests/month', 'Community support', 'Open source data'],
+    cta: 'Get Started', href: '/docs', highlighted: false,
+  },
+  {
+    id: 'basic', name: 'API Basic', price: '€19', period: '/month',
+    desc: 'For startups and small projects.',
+    features: ['3,000 API requests/month', 'Auto-updated rates', 'Email support', 'OSS threshold checker'],
+    cta: 'Subscribe', href: 'https://buy.stripe.com/4gM4gs8qIbra8ZmcxI7bW01', highlighted: true,
+  },
+  {
+    id: 'pro', name: 'API Pro', price: '€49', period: '/month',
+    desc: 'For growing businesses.',
+    features: ['10,000 API requests/month', 'Product classification', 'Rate alerts', 'Priority support'],
+    cta: 'Subscribe', href: 'https://buy.stripe.com/9B66oAbCU8eYfnKcxI7bW02', highlighted: false,
+  },
+  {
+    id: 'enterprise', name: 'Enterprise', price: '€149', period: '/month',
+    desc: 'For scale and compliance teams.',
+    features: ['100,000 API requests/month', 'Country-specific alerts', 'Webhook integration', 'SLA 99.9%', 'Dedicated support'],
+    cta: 'Subscribe', href: 'https://buy.stripe.com/9B63co5ewbra0sQeFQ7bW03', highlighted: false,
+  },
 ];
 
 export default function PricingPage() {
-  const [loading, setLoading] = useState<string | null>(null);
-  const [error, setError] = useState('');
-
-  const handleSubscribe = async (planId: string) => {
-    setLoading(planId);
-    setError('');
-
-    const token = localStorage.getItem('vatrate_token');
-    if (!token) {
-      window.location.href = '/login?redirect=/pricing';
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/v1/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ plan: planId }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.redirect_url) {
-        window.location.href = data.redirect_url;
-      } else {
-        setError(data.message || data.error || 'Failed to start checkout.');
-      }
-    } catch {
-      setError('Network error. Please try again.');
-    }
-    setLoading(null);
-  };
-
   return (
     <div style={{minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
       <header style={{padding: '20px 32px', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(229,231,235,0.5)', position: 'sticky', top: 0, zIndex: 50}}>
@@ -73,12 +57,6 @@ export default function PricingPage() {
           </p>
         </div>
 
-        {error && (
-          <div style={{maxWidth: 600, margin: '0 auto 24px', textAlign: 'center', background: '#fef2f2', color: '#dc2626', padding: '12px 16px', borderRadius: 10, fontSize: 14, border: '1px solid #fecaca'}}>
-            {error}
-          </div>
-        )}
-
         <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 24}}>
           {plans.map(plan => (
             <div key={plan.name} style={{
@@ -105,6 +83,7 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
+
               {plan.id === 'free' ? (
                 <Link href={plan.href} style={{
                   display: 'block', textAlign: 'center', padding: '12px', borderRadius: 10,
@@ -113,8 +92,8 @@ export default function PricingPage() {
                 }}>
                   {plan.cta}
                 </Link>
-              ) : plan.id === 'enterprise' ? (
-                <a href="mailto:hello@vatrate.eu" style={{
+              ) : (
+                <a href={plan.href} target="_blank" rel="noopener noreferrer" style={{
                   display: 'block', textAlign: 'center', padding: '12px', borderRadius: 10,
                   background: plan.highlighted ? 'white' : '#2563eb',
                   color: plan.highlighted ? '#0f172a' : 'white', textDecoration: 'none', fontWeight: 600, fontSize: 15,
@@ -122,17 +101,6 @@ export default function PricingPage() {
                 }}>
                   {plan.cta}
                 </a>
-              ) : (
-                <button onClick={() => handleSubscribe(plan.id)} disabled={loading === plan.id} style={{
-                  display: 'block', textAlign: 'center', padding: '12px', borderRadius: 10, width: '100%',
-                  background: plan.highlighted ? 'white' : '#2563eb',
-                  color: plan.highlighted ? '#0f172a' : 'white', textDecoration: 'none', fontWeight: 600, fontSize: 15,
-                  border: 'none', cursor: loading === plan.id ? 'not-allowed' : 'pointer',
-                  boxShadow: plan.highlighted ? 'none' : '0 4px 14px rgba(37,99,235,0.3)',
-                  opacity: loading === plan.id ? 0.7 : 1,
-                }}>
-                  {loading === plan.id ? 'Redirecting...' : plan.cta}
-                </button>
               )}
             </div>
           ))}

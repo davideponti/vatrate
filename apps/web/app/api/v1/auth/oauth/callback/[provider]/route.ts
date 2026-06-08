@@ -218,10 +218,23 @@ export async function GET(
 </body>
 </html>`;
 
+    // ⚠️ Override the CSP header: next.config.js sets `default-src 'none'`
+    // on all /api/ routes via the headers() config. This would block the
+    // inline <style> and <script> tags in our HTML page, preventing the
+    // spinner CSS and localStorage save JS from executing.
     const response = new NextResponse(html, {
       status: 200,
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
+        'Content-Security-Policy': [
+          "default-src 'self'",
+          "style-src 'self' 'unsafe-inline'",
+          "script-src 'self' 'unsafe-inline'",
+          "img-src 'self' data:",
+          "base-uri 'self'",
+          "form-action 'none'",
+          "frame-ancestors 'none'",
+        ].join('; '),
       },
     });
 

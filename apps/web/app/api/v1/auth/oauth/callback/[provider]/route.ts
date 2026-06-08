@@ -111,7 +111,7 @@ export async function GET(
         email: oauthUser.email,
         email_verified: true,
         plan: 'free',
-        requests_limit: 30000,
+        requests_limit: 100,
       };
 
       // Try to add OAuth-specific columns (may fail if migration 00007 not applied)
@@ -141,7 +141,7 @@ export async function GET(
             email: oauthUser.email,
             email_verified: true,
             plan: 'free',
-            requests_limit: 30000,
+            requests_limit: 100,
           })
           .select('id')
           .single();

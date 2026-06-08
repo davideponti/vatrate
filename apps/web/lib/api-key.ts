@@ -83,7 +83,7 @@ export async function createApiKeyForUser(
     environment,
     plan: 'free',
     requests_used: 0,
-    requests_limit: 30000,
+    requests_limit: 100,
     is_active: true,
   });
 

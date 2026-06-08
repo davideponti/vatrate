@@ -165,12 +165,67 @@ export async function GET(
     // Create session
     const token = await createSession(userId);
 
-    // Determine redirect
-    const redirectTo = '/dashboard';
+    // The dashboard frontend reads the token from localStorage (vatrate_token),
+    // so we need to render an HTML page with JS that saves the session token
+    // to localStorage before redirecting. A server-side redirect can only set
+    // httpOnly cookies, which JS cannot read.
+    const csrfToken = generateCsrfToken();
 
-    const response = NextResponse.redirect(new URL(redirectTo, request.url));
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Redirecting...</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      color: #64748b;
+    }
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #e2e8f0;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .container { text-align: center; }
+    p { margin: 0; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="spinner"></div>
+    <p>Signing in with ${providerName}...</p>
+  </div>
+  <script>
+    try {
+      localStorage.setItem('vatrate_user', ${JSON.stringify(oauthUser.email)});
+      localStorage.setItem('vatrate_token', ${JSON.stringify(token)});
+    } catch (e) {
+      console.error('Failed to save auth to localStorage:', e);
+    }
+    window.location.replace('/dashboard');
+  </script>
+</body>
+</html>`;
 
-    // Set session cookie
+    const response = new NextResponse(html, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+      },
+    });
+
+    // Set session cookie (alternative auth method)
     response.cookies.set('session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -179,8 +234,7 @@ export async function GET(
       path: '/',
     });
 
-    // Set CSRF token cookie
-    const csrfToken = generateCsrfToken();
+    // Set CSRF token cookie for dashboard API protection
     setCsrfCookie(response, csrfToken);
 
     // Clear the OAuth state cookie

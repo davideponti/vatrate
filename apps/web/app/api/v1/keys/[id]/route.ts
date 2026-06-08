@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { authenticateRequest } from '@/lib/auth';
-import { ERR, apiSuccess } from '@/lib/api-helpers';
+import { ERR, apiSuccess, authError } from '@/lib/api-helpers';
 
 export async function DELETE(
   request: NextRequest,
@@ -9,7 +9,7 @@ export async function DELETE(
 ) {
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return ERR.UNAUTHORIZED();
+    return authError(auth);
   }
 
   const { id: keyId } = await params;

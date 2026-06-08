@@ -3,13 +3,13 @@ import { getSupabaseClient } from '@/lib/supabase';
 import { verifyPassword, hashPassword } from '@/lib/password';
 import { authenticateRequest, isValidPassword } from '@/lib/auth';
 import { validateCsrf } from '@/lib/csrf';
-import { ERR, apiSuccess } from '@/lib/api-helpers';
+import { ERR, apiSuccess, authError } from '@/lib/api-helpers';
 
 // PUT /api/v1/user/password
 export async function PUT(request: NextRequest) {
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return ERR.UNAUTHORIZED();
+    return authError(auth);
   }
 
   // CSRF protection for session-based requests (not API key requests)

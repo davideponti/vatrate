@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { classifyProduct, getCountryData } from '@vatrate/api';
 import { z } from 'zod';
 import { authenticateRequest, logUsage } from '@/lib/auth';
-import { ERR, apiSuccess, extractClientInfo } from '@/lib/api-helpers';
+import { ERR, apiSuccess, authError, extractClientInfo } from '@/lib/api-helpers';
 
 const bodySchema = z.object({
   country: z.string().min(2).max(2),
@@ -12,7 +12,7 @@ const bodySchema = z.object({
 export async function POST(request: NextRequest) {
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return ERR.UNAUTHORIZED();
+    return authError(auth);
   }
 
   let body: unknown;

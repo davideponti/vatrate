@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { authenticateRequest } from '@/lib/auth';
-import { ERR, apiSuccess } from '@/lib/api-helpers';
+import { ERR, apiSuccess, authError } from '@/lib/api-helpers';
 
 interface PlanInfo {
   label: string;
@@ -19,7 +19,7 @@ const PLAN_INFO: Record<string, PlanInfo> = {
 export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return ERR.UNAUTHORIZED();
+    return authError(auth);
   }
 
   try {

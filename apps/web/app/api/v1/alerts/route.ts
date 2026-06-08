@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server';
 import { getAlerts } from '@vatrate/api';
 import { authenticateRequest, logUsage } from '@/lib/auth';
-import { ERR, apiSuccess, extractClientInfo } from '@/lib/api-helpers';
+import { ERR, apiSuccess, authError, extractClientInfo } from '@/lib/api-helpers';
 
 export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return ERR.UNAUTHORIZED();
+    return authError(auth);
   }
 
   const result = getAlerts();

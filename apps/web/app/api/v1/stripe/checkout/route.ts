@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { authenticateRequest } from '@/lib/auth';
+import { authError } from '@/lib/api-helpers';
 
 const PLAN_PRICES: Record<string, { price_id: string; amount: number }> = {
   basic: { price_id: '', amount: 1900 },   // €19
@@ -18,10 +19,7 @@ const PLAN_LIMITS: Record<string, number> = {
 export async function POST(request: NextRequest) {
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return NextResponse.json(
-      { error: 'UNAUTHORIZED', message: 'You must be logged in to subscribe.', status: 401 },
-      { status: 401 },
-    );
+    return authError(auth);
   }
 
   let body: { plan?: string };

@@ -3,7 +3,7 @@ import { checkOssThreshold } from '@vatrate/api';
 import type { OssThresholdRequest } from '@vatrate/shared';
 import { z } from 'zod';
 import { authenticateRequest, logUsage } from '@/lib/auth';
-import { ERR, apiSuccess, extractClientInfo } from '@/lib/api-helpers';
+import { ERR, apiSuccess, authError, extractClientInfo } from '@/lib/api-helpers';
 
 const querySchema = z.object({
   home_country: z.string().min(2).max(2),
@@ -12,7 +12,7 @@ const querySchema = z.object({
 export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return ERR.UNAUTHORIZED();
+    return authError(auth);
   }
 
   const { searchParams } = new URL(request.url);

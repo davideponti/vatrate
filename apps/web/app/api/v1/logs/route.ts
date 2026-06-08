@@ -1,13 +1,13 @@
 import { NextRequest } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { authenticateRequest } from '@/lib/auth';
-import { ERR, apiSuccess } from '@/lib/api-helpers';
+import { ERR, apiSuccess, authError } from '@/lib/api-helpers';
 
 // GET /api/v1/logs
 export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return ERR.UNAUTHORIZED();
+    return authError(auth);
   }
 
   try {

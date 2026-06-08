@@ -51,6 +51,18 @@ export const ERR = {
     apiError(429, 'RATE_LIMITED', msg),
 } as const;
 
+/**
+ * Return the correct error response based on auth result status.
+ * Routes should use this instead of hardcoding ERR.UNAUTHORIZED()
+ * so that rate-limit errors (429) are properly propagated.
+ */
+export function authError(auth: { authenticated: boolean; status?: number; error?: string }): NextResponse {
+  if (auth.status === 429) {
+    return ERR.RATE_LIMITED(auth.error);
+  }
+  return apiError(auth.status || 401, 'UNAUTHORIZED', auth.error || 'Authentication required.');
+}
+
 // ──────────────────────────────────────────────
 // Success responses
 // ──────────────────────────────────────────────

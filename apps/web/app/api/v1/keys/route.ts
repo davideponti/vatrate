@@ -3,12 +3,12 @@ import { getSupabaseClient } from '@/lib/supabase';
 import { generateApiKey } from '@/lib/api-key';
 import { authenticateRequest } from '@/lib/auth';
 import { rateLimitBySession } from '@/lib/rate-limit';
-import { ERR, apiSuccess } from '@/lib/api-helpers';
+import { ERR, apiSuccess, authError } from '@/lib/api-helpers';
 
 export async function GET(request: NextRequest) {
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return ERR.UNAUTHORIZED();
+    return authError(auth);
   }
 
   try {
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = await authenticateRequest(request);
   if (!auth.authenticated) {
-    return ERR.UNAUTHORIZED();
+    return authError(auth);
   }
 
   // Rate limit: max 10 API key creations per hour per session

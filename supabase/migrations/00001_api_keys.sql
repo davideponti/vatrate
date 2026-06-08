@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT UNIQUE NOT NULL,
   stripe_customer_id TEXT UNIQUE,
   plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'basic', 'pro', 'enterprise', 'widget')),
-  requests_limit INTEGER NOT NULL DEFAULT 30000, -- free tier: 100/day ~ 3000/month
+  requests_limit INTEGER NOT NULL DEFAULT 100, -- free tier: 100 requests/month
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
   environment TEXT NOT NULL DEFAULT 'live' CHECK (environment IN ('live', 'test')),
   plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'basic', 'pro', 'enterprise', 'widget')),
   requests_used INTEGER DEFAULT 0,
-  requests_limit INTEGER NOT NULL DEFAULT 30000,
+  requests_limit INTEGER NOT NULL DEFAULT 100, -- free tier: 100 requests/month
   is_active BOOLEAN DEFAULT true,
   last_used_at TIMESTAMPTZ,
   expires_at TIMESTAMPTZ,

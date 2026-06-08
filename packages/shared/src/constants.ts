@@ -115,8 +115,8 @@ export const OSS_THRESHOLD = {
 // ─── Rate Limits ─────────────────────────────────────────────
 
 export const RATE_LIMITS: Record<PlanType, { requestsPerDay: number; requestsPerMonth: number }> = {
-  free: { requestsPerDay: 100, requestsPerMonth: 0 },
-  basic: { requestsPerDay: 0, requestsPerMonth: 1000 },
+  free: { requestsPerDay: 100, requestsPerMonth: 100 },
+  basic: { requestsPerDay: 0, requestsPerMonth: 3000 },
   pro: { requestsPerDay: 0, requestsPerMonth: 10000 },
   enterprise: { requestsPerDay: 0, requestsPerMonth: 100000 },
 };

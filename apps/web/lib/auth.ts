@@ -135,6 +135,33 @@ async function authenticateApiKey(apiKey: string): Promise<AuthResult> {
       };
     }
 
+    // ── Aggregate check: sum requests_used across ALL active keys for this user ──
+    // Prevents bypass by generating multiple API keys (each starts at 0 used).
+    try {
+      const { data: aggregate } = await getSupabaseClient()
+        .from('api_keys')
+        .select('requests_used')
+        .eq('user_id', apiKeyData.user_id)
+        .eq('is_active', true)
+        .is('revoked_at', null);
+
+      if (aggregate) {
+        const totalUsed = aggregate.reduce((sum, key) => sum + (key.requests_used || 0), 0);
+        if (totalUsed >= apiKeyData.requests_limit) {
+          return {
+            authenticated: false,
+            error: `Rate limit exceeded (${totalUsed}/${apiKeyData.requests_limit} across all keys). Upgrade your plan at https://vatrate.eu/pricing`,
+            status: 429,
+            requestsUsed: totalUsed,
+            requestsLimit: apiKeyData.requests_limit,
+            plan: apiKeyData.plan,
+          };
+        }
+      }
+    } catch {
+      // If the aggregate query fails, fall back to per-key check only (already passed)
+    }
+
     return {
       authenticated: true,
       userId: apiKeyData.user_id,

@@ -1,13 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useState, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
 
 function ResetPasswordForm() {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const token = searchParams.get('token') || '';
+  const [token, setToken] = useState('');
+
+  // Read token from hash fragment (#token=...) instead of query param (?token=...).
+  // Hash fragments are NOT sent to the server, NOT logged by proxies/CDNs,
+  // and NOT included in the Referer header — preventing token leakage.
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      const match = hash.match(/[#&]token=([^&]+)/);
+      if (match) {
+        setToken(match[1]);
+      }
+    }
+  }, []);
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

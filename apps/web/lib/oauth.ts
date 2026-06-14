@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 /**
  * OAuth helper library for GitHub and Google authentication.
  *
@@ -81,8 +83,7 @@ export function getRedirectUri(provider: string, requestUrl?: string): string {
  * Generate a random state string for CSRF protection.
  */
 export function generateState(): string {
-  const { randomBytes } = require('crypto');
-  return randomBytes(32).toString('hex');
+  return crypto.randomBytes(32).toString('hex');
 }
 
 /**

@@ -84,9 +84,10 @@ async function checkUpstash(key: string, max: number, windowSeconds: number): Pr
   try {
     const windowMs = windowSeconds * 1000;
     const now = Date.now();
-    const resetAt = now + windowMs;
 
-    const response = await fetch(`${UPSTASH_URL}/lua/EVALSHA`, {
+    // Use EVAL instead of EVALSHA to avoid needing SCRIPT LOAD first.
+    // Upstash supports EVAL directly with the script inline.
+    const response = await fetch(`${UPSTASH_URL}/lua/EVAL`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${UPSTASH_TOKEN}`,
@@ -116,11 +117,28 @@ async function checkUpstash(key: string, max: number, windowSeconds: number): Pr
       }),
     });
 
-    if (!response.ok) return null; // fallback silenzioso
+    if (!response.ok) {
+      // Log the error but fall back gracefully
+      console.warn('⚠️ [RATE LIMIT] Upstash Redis request failed, falling back to in-memory:', response.status);
+      return checkInMemory(key, max, windowSeconds);
+    }
 
-    const result = await response.json();
-    if (!result?.result?.[0]) {
-      const ttl = Math.ceil(parseInt(result?.result?.[2] || '0') / 1000);
+    let resultJson: { result?: [number, string, string] };
+    try {
+      resultJson = await response.json();
+    } catch {
+      console.warn('⚠️ [RATE LIMIT] Failed to parse Upstash Redis response, falling back to in-memory');
+      return checkInMemory(key, max, windowSeconds);
+    }
+
+    const result = resultJson?.result;
+    if (!result || !Array.isArray(result) || result.length < 1) {
+      return checkInMemory(key, max, windowSeconds);
+    }
+
+    // result[0] = 0 means rate limited, result[0] = 1 means allowed
+    if (result[0] === 0) {
+      const ttl = Math.ceil(parseInt(result[2] || '0') / 1000);
       return NextResponse.json(
         {
           error: 'RATE_LIMITED',
@@ -140,7 +158,7 @@ async function checkUpstash(key: string, max: number, windowSeconds: number): Pr
 
     return null;
   } catch {
-    // Fallback silenzioso a in-memory in caso di errore Upstash
+    // Fallback silenzioso a in-memory in caso di errore
     return checkInMemory(key, max, windowSeconds);
   }
 }
@@ -160,7 +178,7 @@ function getClientIp(request: NextRequest): string {
 
 /**
  * Apply rate limiting based on IP address.
- * In production con Upstash configurato, usa Redis (serverless-safe).
+ * In produzione con Upstash configurato, usa Redis (serverless-safe).
  * Altrimenti, usa fallback in-memory (solo per sviluppo).
  */
 export async function rateLimitByIp(

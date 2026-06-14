@@ -12,6 +12,16 @@ const ALLOWED_ORIGINS = [
 ];
 
 function getValidOrigin(request: NextRequest): string {
+  // In produzione, usa NEXT_PUBLIC_APP_URL come fonte di verità (non dipende da header falsificabili)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (appUrl && ALLOWED_ORIGINS.includes(appUrl)) {
+    return appUrl;
+  }
+  if (appUrl && (appUrl.includes('vatrate.eu') || appUrl.includes('localhost'))) {
+    return appUrl;
+  }
+
+  // Fallback: usa header-based per backward compatibility
   const origin = request.headers.get('origin');
   const host = request.headers.get('host') || 'vatrate.eu';
 
@@ -83,10 +93,11 @@ export async function POST(request: NextRequest) {
       expires_at: expiresAt,
     });
 
-    // Build reset link with token as query parameter (NOT in URL path)
-    // per ridurre esposizione in log server, cronologia browser e Referer header
+    // Build reset link with token as hash parameter (NOT in query string).
+    // Hash fragments (#) are NOT sent to the server, NOT logged by proxies/CDNs,
+    // and NOT included in the Referer header. The frontend reads it via JS.
     const origin = getValidOrigin(request);
-    const resetLink = `${origin}/reset-password?token=${rawToken}`;
+    const resetLink = `${origin}/reset-password#token=${rawToken}`;
 
     // Send email
     await sendEmail({

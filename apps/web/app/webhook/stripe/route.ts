@@ -77,6 +77,31 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      // Verify user_id in metadata if present — prevents session hijacking
+      const metadataUserId = session.metadata?.user_id;
+      if (metadataUserId) {
+        const { data: verifyUser } = await getSupabaseClient()
+          .from('users')
+          .select('id, email')
+          .eq('id', metadataUserId)
+          .single();
+
+        if (!verifyUser) {
+          console.error(`❌ Checkout session ${session.id}: metadata.user_id ${metadataUserId} not found in DB`);
+          break;
+        }
+
+        // If metadata user_id email doesn't match session email, this is suspicious.
+        // We still process it but log a warning.
+        if (verifyUser.email !== email.toLowerCase()) {
+          console.warn(
+            `⚠️ Checkout session ${session.id}: metadata.user_id email (${verifyUser.email}) ` +
+            `doesn't match session customer_email (${email}). ` +
+            `This could be a legitimate checkout flow or a session mismatch.`
+          );
+        }
+      }
+
       const requestsLimit = getPlanLimit(plan);
 
       try {

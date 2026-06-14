@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
   try {
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check if user exists
+    // Check if user exists — use generic message to prevent user enumeration
     const { data: existingUser } = await getSupabaseClient()
       .from('users')
       .select('id')
@@ -65,9 +65,10 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (existingUser) {
+      // Return success to prevent user enumeration (attacker can't tell if email exists)
       return NextResponse.json(
-        { error: 'CONFLICT', message: 'An account with this email already exists.', status: 409 },
-        { status: 409 },
+        { message: 'Account created successfully.' },
+        { status: 201 },
       );
     }
 

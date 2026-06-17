@@ -5,7 +5,7 @@ const plans = [
     id: 'free', name: 'Free', price: '€0', period: 'forever',
     desc: 'For developers exploring EU VAT.',
     features: ['JSON access via GitHub', '100 API requests/month', 'Community support', 'Open source data'],
-    cta: 'Get Started', href: '/docs', highlighted: false,
+    cta: 'Get Started', href: '/signup', highlighted: false,
   },
   {
     id: 'basic', name: 'API Basic', price: '€19', period: '/month',

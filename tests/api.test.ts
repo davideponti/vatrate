@@ -67,6 +67,20 @@ describe('GET /api/v1/rate', () => {
     if ('error' in result) throw new Error(result.message);
     expect(result.rate).toBe(19);
   });
+
+  // Anonymous requests test: business logic works without API key
+  it('returns correct rate for anonymous request (no API key needed)', () => {
+    const result = resolveRate({ country: 'DE', type: 'saas', customer: 'consumer' });
+    if ('error' in result) throw new Error(result.message);
+    expect(result.rate).toBe(19);
+  });
+
+  it('handles anonymous reverse charge lookup', () => {
+    const result = resolveRate({ country: 'FR', type: 'saas', customer: 'business' });
+    if ('error' in result) throw new Error(result.message);
+    expect(result.rate).toBe(0);
+    expect(result.mechanism).toBe('reverse_charge');
+  });
 });
 
 describe('GET /api/v1/rates', () => {

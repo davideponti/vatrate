@@ -12,6 +12,12 @@ export interface AuthResult {
   plan?: string;
   requestsUsed?: number;
   requestsLimit?: number;
+  /**
+   * Present only when authenticated=false.
+   * 'missing' = no Authorization header at all (caller may allow anonymous).
+   * undefined = auth header present but invalid/expired/revoked.
+   */
+  reason?: 'missing';
 }
 
 /**
@@ -61,6 +67,36 @@ export async function authenticateRequest(request: NextRequest): Promise<AuthRes
 
   // Check if it's a session token (web dashboard) vs API key
   // Session tokens are hex strings (64 chars), API keys start with "vr_"
+  if (!bearerToken.startsWith('vr_')) {
+    return await authenticateSession(bearerToken);
+  }
+
+  return await authenticateApiKey(bearerToken);
+}
+
+/**
+ * Authenticate a request, but allow anonymous access when no Authorization header is present.
+ *
+ * - If no Authorization header → returns `{ authenticated: false, reason: 'missing' }`
+ *   (caller may allow anonymous with stricter rate limiting)
+ * - If Authorization header present but invalid → returns `{ authenticated: false, status: 4xx }`
+ * - If Authorization header valid → returns `{ authenticated: true, ...userData }`
+ *
+ * Useful for endpoints that want to support "try it without an API key" while still
+ * rejecting requests with visibly invalid keys.
+ */
+export async function authenticateOptional(request: NextRequest): Promise<AuthResult> {
+  const authHeader = request.headers.get('authorization');
+  const bearerToken = extractKeyFromHeader(authHeader);
+
+  if (!bearerToken) {
+    return {
+      authenticated: false,
+      reason: 'missing',
+    };
+  }
+
+  // Check if it's a session token (web dashboard) vs API key
   if (!bearerToken.startsWith('vr_')) {
     return await authenticateSession(bearerToken);
   }

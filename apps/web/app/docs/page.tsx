@@ -220,12 +220,39 @@ export default function DocsPage() {
         </main>
       </div>
 
-      <footer style={{...styles.footer, padding: '24px 32px 32px'}}>
-        <div style={{display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 12}}>
-          <Link href="/terms" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Terms &amp; Conditions</Link>
-          <Link href="/privacy" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Privacy Policy</Link>
+      <footer style={{borderTop: '1px solid #f1f5f9', padding: '48px 32px 32px', background: '#fafafa', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
+        <div style={{maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 32}}>
+          <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
+            <div style={{fontSize: 18, fontWeight: 800, color: '#2563eb', marginBottom: 8}}>VATRate</div>
+            <p style={{color: '#64748b', fontSize: 14, margin: 0, maxWidth: 240, lineHeight: 1.6}}>
+              Open-source EU VAT rates API for developers. Know your VAT, ship globally.
+            </p>
+          </div>
+          <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
+            <div style={{fontSize: 13, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8}}>Product</div>
+            <Link href="/docs" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Documentation</Link>
+            <Link href="/pricing" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Pricing</Link>
+            <a href="https://github.com/davideponti/vatrate" target="_blank" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>GitHub</a>
+          </div>
+          <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
+            <div style={{fontSize: 13, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8}}>API</div>
+            <Link href="/docs#rate" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Get VAT Rate</Link>
+            <Link href="/docs#rates" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Country Rates</Link>
+            <Link href="/docs#oss" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>OSS Threshold</Link>
+            <Link href="/docs#products" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Classification</Link>
+          </div>
+          <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
+            <div style={{fontSize: 13, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8}}>Company</div>
+            <a href="mailto:hello@vatrate.eu" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Contact</a>
+            <a href="https://github.com/davideponti/vatrate/issues" target="_blank" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Report Issue</a>
+            <Link href="/terms" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Terms &amp; Conditions</Link>
+            <Link href="/privacy" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Privacy Policy</Link>
+          </div>
         </div>
-        © 2026 VATRate. Open source EU VAT data for developers.
+        <div style={{maxWidth: 1200, margin: '32px auto 0', paddingTop: 24, borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, fontSize: 13, color: '#94a3b8'}}>
+          <span>© 2026 VATRate. Open source EU VAT data.</span>
+          <span>Made with ❤️ for developers across Europe.</span>
+        </div>
       </footer>
     </div>
   );

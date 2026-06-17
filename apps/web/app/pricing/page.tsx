@@ -57,7 +57,7 @@ export default function PricingPage() {
           </p>
         </div>
 
-        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 24}}>
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24}}>
           {plans.map(plan => (
             <div key={plan.name} style={{
               padding: 32, background: plan.highlighted ? '#0f172a' : 'white', borderRadius: 16,

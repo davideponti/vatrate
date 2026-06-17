@@ -23,6 +23,8 @@ function ResetPasswordForm() {
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -269,60 +271,112 @@ function ResetPasswordForm() {
                   flexDirection: 'column',
                   gap: 16,
                 }}>
-                <div>
-                  <label
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 600,
-                      display: 'block',
-                      marginBottom: 6,
-                    }}>
-                    New Password
-                  </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 8 characters"
-                    disabled={loading}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: 8,
-                      border: '1px solid #e5e7eb',
-                      fontSize: 15,
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                </div>
-                <div>
-                  <label
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 600,
-                      display: 'block',
-                      marginBottom: 6,
-                    }}>
-                    Confirm Password
-                  </label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Repeat your password"
-                    disabled={loading}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: 8,
-                      border: '1px solid #e5e7eb',
-                      fontSize: 15,
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                </div>
+                  <div>
+                    <label
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        display: 'block',
+                        marginBottom: 6,
+                      }}>
+                      New Password
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="At least 8 characters"
+                        disabled={loading}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          paddingRight: 44,
+                          borderRadius: 8,
+                          border: '1px solid #e5e7eb',
+                          fontSize: 15,
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        disabled={loading}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        style={{
+                          position: 'absolute',
+                          right: 8,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: loading ? 'not-allowed' : 'pointer',
+                          padding: 8,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 20,
+                          lineHeight: 1,
+                          color: '#9ca3af',
+                        }}>
+                        {showPassword ? '🙈' : '👁️'}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        display: 'block',
+                        marginBottom: 6,
+                      }}>
+                      Confirm Password
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Repeat your password"
+                        disabled={loading}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          paddingRight: 44,
+                          borderRadius: 8,
+                          border: '1px solid #e5e7eb',
+                          fontSize: 15,
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        disabled={loading}
+                        aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                        style={{
+                          position: 'absolute',
+                          right: 8,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: loading ? 'not-allowed' : 'pointer',
+                          padding: 8,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 20,
+                          lineHeight: 1,
+                          color: '#9ca3af',
+                        }}>
+                        {showConfirmPassword ? '🙈' : '👁️'}
+                      </button>
+                    </div>
+                  </div>
                 <button
                   type="submit"
                   disabled={loading}

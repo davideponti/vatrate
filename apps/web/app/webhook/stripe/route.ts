@@ -20,7 +20,7 @@ type Plan = (typeof ALLOWED_PLANS)[number];
 
 const PLAN_LIMITS: Record<Plan, number> = {
   free: 100,
-  basic: 1000,
+  basic: 3000,
   pro: 10000,
   enterprise: 100000,
   widget: 50000,

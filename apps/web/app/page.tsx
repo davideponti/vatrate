@@ -559,6 +559,8 @@ export default function HomePage() {
             <div style={styles.footerTitle}>Company</div>
             <a href="mailto:hello@vatrate.eu" style={styles.footerLink}>Contact</a>
             <a href="https://github.com/davideponti/vatrate/issues" target="_blank" style={styles.footerLink}>Report Issue</a>
+            <Link href="/terms" style={styles.footerLink}>Terms &amp; Conditions</Link>
+            <Link href="/privacy" style={styles.footerLink}>Privacy Policy</Link>
           </div>
         </div>
         <div style={styles.footerBottom}>

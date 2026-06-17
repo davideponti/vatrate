@@ -243,7 +243,7 @@ export default function DocsPage() {
           </div>
           <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
             <div style={{fontSize: 13, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8}}>Company</div>
-            <a href="mailto:hello@vatrate.eu" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Contact</a>
+            <a href="mailto:info@vatrate.eu" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Contact</a>
             <a href="https://github.com/davideponti/vatrate/issues" target="_blank" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Report Issue</a>
             <Link href="/terms" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Terms &amp; Conditions</Link>
             <Link href="/privacy" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Privacy Policy</Link>

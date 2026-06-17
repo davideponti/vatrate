@@ -93,7 +93,7 @@ export default function TermsPage() {
           <section>
             <h2 style={{fontSize: 22, fontWeight: 700, margin: '0 0 12px', color: '#0f172a'}}>10. Contact</h2>
             <p style={{color: '#475569', lineHeight: 1.8, fontSize: 15, margin: 0}}>
-              For questions about these terms, contact us at <a href="mailto:hello@vatrate.eu" style={{color: '#2563eb', fontWeight: 600}}>hello@vatrate.eu</a>.
+              For questions about these terms, contact us at <a href="mailto:info@vatrate.eu" style={{color: '#2563eb', fontWeight: 600}}>info@vatrate.eu</a>.
             </p>
           </section>
         </div>
@@ -123,7 +123,7 @@ export default function TermsPage() {
           </div>
           <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
             <div style={{fontSize: 13, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8}}>Company</div>
-            <a href="mailto:hello@vatrate.eu" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Contact</a>
+            <a href="mailto:info@vatrate.eu" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Contact</a>
             <a href="https://github.com/davideponti/vatrate/issues" target="_blank" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Report Issue</a>
             <Link href="/terms" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Terms & Conditions</Link>
             <Link href="/privacy" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Privacy Policy</Link>

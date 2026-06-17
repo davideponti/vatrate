@@ -109,7 +109,7 @@ export default function PricingPage() {
         <div style={{marginTop: 60, padding: 32, background: '#f8fafc', borderRadius: 16, border: '1px solid #e2e8f0', textAlign: 'center'}}>
           <h3 style={{fontSize: 18, fontWeight: 700, margin: '0 0 8px', color: '#0f172a'}}>Need a custom plan?</h3>
           <p style={{color: '#64748b', fontSize: 15, margin: '0 0 16px'}}>We offer white-label solutions, Shopify apps, and platform integrations.</p>
-          <a href="mailto:hello@vatrate.eu" style={{color: '#2563eb', fontWeight: 600, fontSize: 15}}>hello@vatrate.eu</a>
+          <a href="mailto:info@vatrate.eu" style={{color: '#2563eb', fontWeight: 600, fontSize: 15}}>info@vatrate.eu</a>
         </div>
       </section>
 
@@ -136,7 +136,7 @@ export default function PricingPage() {
           </div>
           <div style={{display: 'flex', flexDirection: 'column', gap: 8}}>
             <div style={{fontSize: 13, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8}}>Company</div>
-            <a href="mailto:hello@vatrate.eu" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Contact</a>
+            <a href="mailto:info@vatrate.eu" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Contact</a>
             <a href="https://github.com/davideponti/vatrate/issues" target="_blank" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Report Issue</a>
             <Link href="/terms" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Terms &amp; Conditions</Link>
             <Link href="/privacy" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Privacy Policy</Link>

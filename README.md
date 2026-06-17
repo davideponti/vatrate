@@ -272,7 +272,7 @@ The VAT rates data is sourced from the [European Commission VAT Rates Database](
 | Channel | Where |
 |---------|-------|
 | **Website** | [vatrate.eu](https://vatrate.eu) |
-| **Email** | [hello@vatrate.eu](mailto:hello@vatrate.eu) |
+| **Email** | [info@vatrate.eu](mailto:info@vatrate.eu) |
 | **Security** | [security@vatrate.eu](mailto:security@vatrate.eu) — [see policy](SECURITY.md) |
 | **Issues** | [github.com/davideponti/vatrate/issues](https://github.com/davideponti/vatrate/issues) |
 | **Documentation** | [vatrate.eu/docs](https://vatrate.eu/docs) |

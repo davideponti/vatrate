@@ -115,6 +115,7 @@ export async function POST(request: NextRequest) {
       customer: stripeCustomerId,
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
+      allow_promotion_codes: true,
       metadata: {
         plan,
         user_id: auth.userId || '',

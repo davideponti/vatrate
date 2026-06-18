@@ -1,6 +1,22 @@
-import Link from 'next/link';
+'use client';
 
-const plans = [
+import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+interface Plan {
+  id: string;
+  name: string;
+  price: string;
+  period: string;
+  desc: string;
+  features: string[];
+  cta: string;
+  href?: string;
+  highlighted: boolean;
+}
+
+const plans: Plan[] = [
   {
     id: 'free', name: 'Free', price: '€0', period: 'forever',
     desc: 'For developers exploring EU VAT.',
@@ -11,23 +27,56 @@ const plans = [
     id: 'basic', name: 'API Basic', price: '€19', period: '/month',
     desc: 'For startups and small projects.',
     features: ['3,000 API requests/month', 'Auto-updated rates', 'Email support', 'OSS threshold checker'],
-    cta: 'Subscribe', href: 'https://buy.stripe.com/4gM4gs8qIbra8ZmcxI7bW01', highlighted: true,
+    cta: 'Subscribe', highlighted: true,
   },
   {
     id: 'pro', name: 'API Pro', price: '€49', period: '/month',
     desc: 'For growing businesses.',
     features: ['10,000 API requests/month', 'Product classification', 'Rate alerts', 'Priority support'],
-    cta: 'Subscribe', href: 'https://buy.stripe.com/9B66oAbCU8eYfnKcxI7bW02', highlighted: false,
+    cta: 'Subscribe', highlighted: false,
   },
   {
     id: 'enterprise', name: 'Enterprise', price: '€149', period: '/month',
     desc: 'For scale and compliance teams.',
     features: ['100,000 API requests/month', 'Country-specific alerts', 'Webhook integration', 'SLA 99.9%', 'Dedicated support'],
-    cta: 'Subscribe', href: 'https://buy.stripe.com/9B63co5ewbra0sQeFQ7bW03', highlighted: false,
+    cta: 'Subscribe', highlighted: false,
   },
 ];
 
 export default function PricingPage() {
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const router = useRouter();
+
+  async function handleSubscribe(plan: string) {
+    setLoadingPlan(plan);
+    try {
+      const res = await fetch('/api/v1/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
+      });
+
+      if (res.status === 401) {
+        router.push('/login');
+        return;
+      }
+
+      if (!res.ok) {
+        console.error('Checkout error:', await res.text());
+        return;
+      }
+
+      const data = await res.json();
+      if (data.redirect_url) {
+        window.location.href = data.redirect_url;
+      }
+    } catch (error) {
+      console.error('Network error:', error);
+    } finally {
+      setLoadingPlan(null);
+    }
+  }
+
   return (
     <div style={{minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
       <header style={{padding: '20px 32px', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(229,231,235,0.5)', position: 'sticky', top: 0, zIndex: 50}}>
@@ -85,7 +134,7 @@ export default function PricingPage() {
               </ul>
 
               {plan.id === 'free' ? (
-                <Link href={plan.href} style={{
+                <Link href={plan.href!} style={{
                   display: 'block', textAlign: 'center', padding: '12px', borderRadius: 10,
                   background: '#2563eb', color: 'white', textDecoration: 'none', fontWeight: 600, fontSize: 15,
                   boxShadow: '0 4px 14px rgba(37,99,235,0.3)',
@@ -93,14 +142,18 @@ export default function PricingPage() {
                   {plan.cta}
                 </Link>
               ) : (
-                <a href={plan.href} target="_blank" rel="noopener noreferrer" style={{
-                  display: 'block', textAlign: 'center', padding: '12px', borderRadius: 10,
-                  background: plan.highlighted ? 'white' : '#2563eb',
-                  color: plan.highlighted ? '#0f172a' : 'white', textDecoration: 'none', fontWeight: 600, fontSize: 15,
-                  boxShadow: plan.highlighted ? 'none' : '0 4px 14px rgba(37,99,235,0.3)',
-                }}>
-                  {plan.cta}
-                </a>
+                <button
+                  onClick={() => handleSubscribe(plan.id)}
+                  disabled={loadingPlan === plan.id}
+                  style={{
+                    display: 'block', textAlign: 'center', padding: '12px', borderRadius: 10, border: 'none', width: '100%', cursor: loadingPlan === plan.id ? 'not-allowed' : 'pointer',
+                    background: plan.highlighted ? 'white' : '#2563eb',
+                    color: plan.highlighted ? '#0f172a' : 'white', fontWeight: 600, fontSize: 15,
+                    boxShadow: plan.highlighted ? 'none' : '0 4px 14px rgba(37,99,235,0.3)',
+                    opacity: loadingPlan === plan.id ? 0.7 : 1,
+                  }}>
+                  {loadingPlan === plan.id ? 'Redirecting…' : plan.cta}
+                </button>
               )}
             </div>
           ))}
@@ -138,7 +191,7 @@ export default function PricingPage() {
             <div style={{fontSize: 13, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8}}>Company</div>
             <a href="mailto:info@vatrate.eu" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Contact</a>
             <a href="https://github.com/davideponti/vatrate/issues" target="_blank" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Report Issue</a>
-            <Link href="/terms" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Terms &amp; Conditions</Link>
+            <Link href="/terms" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Terms & Conditions</Link>
             <Link href="/privacy" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Privacy Policy</Link>
           </div>
         </div>

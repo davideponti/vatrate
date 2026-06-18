@@ -49,14 +49,22 @@ export default function PricingPage() {
 
   async function handleSubscribe(plan: string) {
     setLoadingPlan(plan);
+
+    const token = localStorage.getItem('vatrate_token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
     try {
       const res = await fetch('/api/v1/stripe/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ plan }),
       });
 
       if (res.status === 401) {
+        localStorage.clear();
         router.push('/login');
         return;
       }

@@ -43,6 +43,27 @@ const plans: Plan[] = [
   },
 ];
 
+function getAuthToken(): string | null {
+  try {
+    const token = localStorage.getItem('vatrate_token');
+    // Reject empty strings and whitespace-only tokens
+    if (!token || token.trim() === '') return null;
+    return token;
+  } catch {
+    // localStorage might be blocked (private browsing, etc.)
+    return null;
+  }
+}
+
+function clearAuth(): void {
+  try {
+    localStorage.removeItem('vatrate_token');
+    localStorage.removeItem('vatrate_user');
+  } catch {
+    // ignore
+  }
+}
+
 export default function PricingPage() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const router = useRouter();
@@ -50,8 +71,9 @@ export default function PricingPage() {
   async function handleSubscribe(plan: string) {
     setLoadingPlan(plan);
 
-    const token = localStorage.getItem('vatrate_token');
+    const token = getAuthToken();
     if (!token) {
+      console.warn('[Pricing] No valid auth token found — redirecting to /login');
       router.push('/login');
       return;
     }
@@ -64,13 +86,14 @@ export default function PricingPage() {
       });
 
       if (res.status === 401) {
-        localStorage.clear();
+        console.warn('[Pricing] Server rejected token — clearing auth and redirecting to login');
+        clearAuth();
         router.push('/login');
         return;
       }
 
       if (!res.ok) {
-        console.error('Checkout error:', await res.text());
+        console.error('[Pricing] Checkout error:', await res.text());
         return;
       }
 
@@ -79,7 +102,7 @@ export default function PricingPage() {
         window.location.href = data.redirect_url;
       }
     } catch (error) {
-      console.error('Network error:', error);
+      console.error('[Pricing] Network error:', error);
     } finally {
       setLoadingPlan(null);
     }

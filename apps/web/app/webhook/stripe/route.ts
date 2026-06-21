@@ -66,70 +66,89 @@ export async function POST(request: NextRequest) {
   switch (eventType) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session;
-      const email = session.customer_email;
       const stripeCustomerId = session.customer as string;
       const plan = session.metadata?.plan || 'basic';
+      const sessionEmail = session.customer_details?.email || session.customer_email || undefined;
 
-      console.log(`✅ Checkout completed: ${session.id} for ${email}`);
+      console.log(`✅ Checkout completed: ${session.id} for ${sessionEmail || stripeCustomerId}`);
 
-      if (!email) {
-        console.error('No email in session');
+      if (!sessionEmail && !stripeCustomerId) {
+        console.error('No email or customer ID in session');
         break;
-      }
-
-      // Verify user_id in metadata if present — prevents session hijacking
-      const metadataUserId = session.metadata?.user_id;
-      if (metadataUserId) {
-        const { data: verifyUser } = await getSupabaseClient()
-          .from('users')
-          .select('id, email')
-          .eq('id', metadataUserId)
-          .single();
-
-        if (!verifyUser) {
-          console.error(`❌ Checkout session ${session.id}: metadata.user_id ${metadataUserId} not found in DB`);
-          break;
-        }
-
-        // If metadata user_id email doesn't match session email, this is suspicious.
-        // We still process it but log a warning.
-        if (verifyUser.email !== email.toLowerCase()) {
-          console.warn(
-            `⚠️ Checkout session ${session.id}: metadata.user_id email (${verifyUser.email}) ` +
-            `doesn't match session customer_email (${email}). ` +
-            `This could be a legitimate checkout flow or a session mismatch.`
-          );
-        }
       }
 
       const requestsLimit = getPlanLimit(plan);
 
       try {
-        // Check if user exists
-        const { data: existingUser } = await getSupabaseClient()
-          .from('users')
-          .select('id')
-          .eq('email', email.toLowerCase())
-          .single();
+        let userId: string | null = null;
 
-        let userId: string;
+        // 1) Try to find user by email (for sessions created with customer_email)
+        if (sessionEmail) {
+          const { data: existingUser } = await getSupabaseClient()
+            .from('users')
+            .select('id')
+            .eq('email', sessionEmail.toLowerCase())
+            .single();
 
-        if (existingUser) {
-          userId = existingUser.id;
+          if (existingUser) {
+            userId = existingUser.id;
+          }
+        }
+
+        // 2) Fallback: try to find user by stripe_customer_id (for sessions created with customer)
+        if (!userId && stripeCustomerId) {
+          const { data: userByCustomer } = await getSupabaseClient()
+            .from('users')
+            .select('id')
+            .eq('stripe_customer_id', stripeCustomerId)
+            .single();
+
+          if (userByCustomer) {
+            userId = userByCustomer.id;
+          }
+        }
+
+        // 3) Verify user_id in metadata if present — prevents session hijacking
+        const metadataUserId = session.metadata?.user_id;
+        if (metadataUserId && userId && metadataUserId !== userId) {
+          console.warn(
+            `⚠️ Checkout session ${session.id}: metadata.user_id (${metadataUserId}) ` +
+            `doesn't match resolved user (${userId}). Could be a session mismatch.`
+          );
+        }
+
+        if (userId) {
+          // Update existing user's plan
+          const updateData: Record<string, unknown> = {
+            plan,
+            requests_limit: requestsLimit,
+            updated_at: new Date().toISOString(),
+          };
+          if (stripeCustomerId) {
+            updateData.stripe_customer_id = stripeCustomerId;
+          }
+
           await getSupabaseClient()
             .from('users')
-            .update({
-              plan,
-              requests_limit: requestsLimit,
-              stripe_customer_id: stripeCustomerId,
-            })
+            .update(updateData)
             .eq('id', userId);
-        } else {
+
+          // Also update existing active API keys with the new plan
+          await getSupabaseClient()
+            .from('api_keys')
+            .update({ plan, requests_limit: requestsLimit })
+            .eq('user_id', userId)
+            .eq('is_active', true)
+            .is('revoked_at', null);
+
+          console.log(`📦 Plan upgraded for user ${userId}: ${plan} (${requestsLimit} reqs/month)`);
+        } else if (sessionEmail) {
+          // Create new user
           const { data: newUser } = await getSupabaseClient()
             .from('users')
             .insert({
-              email: email.toLowerCase(),
-              stripe_customer_id: stripeCustomerId,
+              email: sessionEmail.toLowerCase(),
+              stripe_customer_id: stripeCustomerId || null,
               plan,
               requests_limit: requestsLimit,
               email_verified: true,
@@ -142,6 +161,9 @@ export async function POST(request: NextRequest) {
             break;
           }
           userId = newUser.id;
+        } else {
+          console.error('Cannot resolve user — no email and no matching stripe_customer_id');
+          break;
         }
 
         // Generate and store API key
@@ -157,7 +179,7 @@ export async function POST(request: NextRequest) {
           requests_limit: requestsLimit,
         });
 
-        console.log(`🔑 API key generated for ${email}: ${keyPrefix}...`);
+        console.log(`🔑 API key generated for user ${userId}: ${keyPrefix}...`);
       } catch (error) {
         console.error('Failed to process checkout:', error);
       }

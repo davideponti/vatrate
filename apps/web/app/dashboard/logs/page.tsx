@@ -93,6 +93,8 @@ export default function LogsPage() {
             <Link href="/dashboard" style={nh.link(false)}>Dashboard</Link>
             <Link href="/dashboard/logs" style={nh.link(true)}>Logs</Link>
             <Link href="/dashboard/settings" style={nh.link(false)}>Settings</Link>
+            <Link href="/docs" style={nh.link(false)}>Docs</Link>
+            <Link href="/pricing" style={nh.link(false)}>Pricing</Link>
             <a href="https://github.com/davideponti/vatrate" target="_blank" style={nh.bg}>GitHub</a>
             <button onClick={logout} style={nh.bd}>Logout</button>
           </nav>

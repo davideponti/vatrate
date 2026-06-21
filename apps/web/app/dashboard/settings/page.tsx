@@ -166,6 +166,8 @@ export default function SettingsPage() {
             <Link href="/dashboard" style={navStyle.link(false)}>Dashboard</Link>
             <Link href="/dashboard/logs" style={navStyle.link(false)}>Logs</Link>
             <Link href="/dashboard/settings" style={navStyle.link(true)}>Settings</Link>
+            <Link href="/docs" style={navStyle.link(false)}>Docs</Link>
+            <Link href="/pricing" style={navStyle.link(false)}>Pricing</Link>
             <a href="https://github.com/davideponti/vatrate" target="_blank" style={navStyle.btnGhost}>GitHub</a>
             <button onClick={logOut} style={navStyle.btnDanger}>Logout</button>
           </nav>

@@ -118,6 +118,8 @@ export default function DashboardPage() {
             <Link href="/dashboard" style={navStyle.link(true)}>Dashboard</Link>
             <Link href="/dashboard/logs" style={navStyle.link(false)}>Logs</Link>
             <Link href="/dashboard/settings" style={navStyle.link(false)}>Settings</Link>
+            <Link href="/docs" style={navStyle.link(false)}>Docs</Link>
+            <Link href="/pricing" style={navStyle.link(false)}>Pricing</Link>
             <a href="https://github.com/davideponti/vatrate" target="_blank" style={navStyle.btnGhost}>GitHub</a>
             <button onClick={logout} style={navStyle.btnDanger}>Logout</button>
           </nav>

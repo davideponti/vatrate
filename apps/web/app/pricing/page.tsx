@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface Plan {
   id: string;
@@ -64,17 +64,29 @@ function clearAuth(): void {
   }
 }
 
-export default function PricingPage() {
+function PricingContent() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // If user arrives with ?selected=basic|pro|enterprise and is logged in, auto-checkout
+  useEffect(() => {
+    const selected = searchParams?.get('selected');
+    if (selected && ['basic', 'pro', 'enterprise'].includes(selected)) {
+      const token = getAuthToken();
+      if (token) {
+        handleSubscribe(selected);
+      }
+    }
+  }, [searchParams]);
 
   async function handleSubscribe(plan: string) {
     setLoadingPlan(plan);
 
     const token = getAuthToken();
     if (!token) {
-      console.warn('[Pricing] No valid auth token found — redirecting to /login');
-      router.push('/login');
+      console.warn('[Pricing] No valid auth token found — redirecting to /signup with plan');
+      router.push(`/signup?plan=${plan}`);
       return;
     }
 
@@ -232,5 +244,17 @@ export default function PricingPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <Suspense fallback={
+      <div style={{minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
+        <div style={{fontSize: 16, color: '#64748b'}}>Loading...</div>
+      </div>
+    }>
+      <PricingContent />
+    </Suspense>
   );
 }

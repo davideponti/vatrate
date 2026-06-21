@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import OAuthButtons from '@/components/oauth-buttons';
 
 const s = {
@@ -21,7 +21,7 @@ const s = {
   link: { color: '#2563eb', fontWeight: 600, textDecoration: 'none' },
 };
 
-export default function SignupPage() {
+function SignupContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -29,7 +29,17 @@ export default function SignupPage() {
   const [step, setStep] = useState<'signup' | 'verify'>('signup');
   const [verificationCode, setVerificationCode] = useState('');
   const [createdEmail, setCreatedEmail] = useState('');
+  const [pendingPlan, setPendingPlan] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Read plan from URL params (e.g. /signup?plan=basic)
+  useEffect(() => {
+    const plan = searchParams?.get('plan');
+    if (plan && ['basic', 'pro', 'enterprise'].includes(plan)) {
+      setPendingPlan(plan);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,7 +114,12 @@ export default function SignupPage() {
       if (loginRes.ok) {
         localStorage.setItem('vatrate_user', loginData.user?.email || createdEmail);
         localStorage.setItem('vatrate_token', loginData.token);
-        router.push('/dashboard');
+        // If user came from pricing with a plan, redirect back to pricing with selected plan
+        if (pendingPlan) {
+          router.push(`/pricing?selected=${pendingPlan}`);
+        } else {
+          router.push('/dashboard');
+        }
       } else {
         router.push('/login');
       }
@@ -297,5 +312,17 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div style={{minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
+        <div style={{fontSize: 16, color: '#64748b'}}>Loading...</div>
+      </div>
+    }>
+      <SignupContent />
+    </Suspense>
   );
 }

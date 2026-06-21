@@ -86,7 +86,25 @@ function SettingsContent() {
     if (!token || !email) { router.push('/login'); return; }
     setUser(email);
     fetchProfile(token);
+    // Sync plan from Stripe automatically (fixes plans not applied after payment)
+    syncPlanFromStripe(token);
   }, [router]);
+
+  const syncPlanFromStripe = async (token: string) => {
+    try {
+      const res = await fetch('/api/v1/stripe/sync-plans', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.synced && data.plan) {
+        // Refresh profile to show updated plan
+        fetchProfile(token);
+      }
+    } catch (e) {
+      console.error('Failed to sync plan from Stripe:', e);
+    }
+  };
 
   const fetchProfile = async (token: string) => {
     try {

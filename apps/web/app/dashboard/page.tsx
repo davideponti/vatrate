@@ -173,12 +173,39 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Plan Upgrade Banner for free users */}
+        {(!apiKeys[0] || apiKeys[0].plan === 'free') && (
+          <div style={{
+            background: 'linear-gradient(135deg, #eef2ff, #ffffff)',
+            borderRadius: 12, border: '2px solid #c7d2fe',
+            padding: '20px 24px', marginBottom: 24,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            flexWrap: 'wrap', gap: 16,
+          }}>
+            <div>
+              <div style={{fontSize: 16, fontWeight: 700, color: '#0f172a', marginBottom: 4}}>
+                ⚡ You're on the Free Plan
+              </div>
+              <div style={{fontSize: 14, color: '#64748b'}}>
+                {totalLimit - totalUsed} requests remaining this month. Upgrade for higher limits and more features.
+              </div>
+            </div>
+            <Link href="/pricing" style={{
+              padding: '10px 24px', background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+              color: 'white', borderRadius: 10, textDecoration: 'none', fontSize: 14, fontWeight: 600,
+              boxShadow: '0 4px 14px rgba(37,99,235,0.3)', whiteSpace: 'nowrap',
+            }}>
+              Upgrade Plan →
+            </Link>
+          </div>
+        )}
+
         {/* Stats */}
         <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32}}>
           {[
             { label: 'Active Keys', value: activeKeys.length, color: '#2563eb' },
             { label: 'API Requests', value: `${totalUsed.toLocaleString()} / ${totalLimit.toLocaleString()}`, color: '#059669' },
-            { label: 'Plan', value: apiKeys[0]?.plan || 'free', color: '#d97706' },
+            { label: 'Plan', value: (apiKeys[0]?.plan || 'free').charAt(0).toUpperCase() + (apiKeys[0]?.plan || 'free').slice(1), color: apiKeys[0]?.plan === 'free' ? '#d97706' : '#059669' },
             { label: 'Status', value: 'Active', color: '#059669' },
           ].map(s => (
             <div key={s.label} style={{padding: 24, background: 'white', borderRadius: 12, border: '1px solid #f1f5f9', boxShadow: '0 1px 3px rgba(0,0,0,0.04)'}}>

@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface UserProfile {
   id: string;
@@ -45,8 +45,9 @@ const planBadge: Record<string, { bg: string; color: string; label: string }> = 
   enterprise: { bg: '#ede9fe', color: '#5b21b6', label: 'Enterprise' },
 };
 
-export default function SettingsPage() {
+function SettingsContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,6 +64,21 @@ export default function SettingsPage() {
   const [portalLoading, setPortalLoading] = useState(false);
 
   const getToken = () => localStorage.getItem('vatrate_token');
+
+  // Check for checkout success from URL
+  useEffect(() => {
+    const checkout = searchParams?.get('checkout');
+    if (checkout === 'success') {
+      setSuccess('✅ Payment successful! Your plan has been upgraded. Welcome aboard!');
+      // Clear the URL param without refreshing
+      const url = new URL(window.location.href);
+      url.searchParams.delete('checkout');
+      window.history.replaceState({}, '', url.toString());
+      // Refresh profile data to show updated plan
+      const token = getToken();
+      if (token) fetchProfile(token);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const token = getToken();
@@ -301,5 +317,17 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={
+      <div style={{minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc'}}>
+        <div style={{fontSize: 16, color: '#64748b'}}>Loading...</div>
+      </div>
+    }>
+      <SettingsContent />
+    </Suspense>
   );
 }

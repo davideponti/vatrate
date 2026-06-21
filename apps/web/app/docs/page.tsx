@@ -1,10 +1,7 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'API Reference',
-  description: 'VATRate API documentation. Get EU VAT rates for any country, product type, and customer type.',
-};
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 const sections = [
   { id: 'rate', title: 'GET /api/v1/rate', desc: 'Get the VAT rate for a specific transaction.', params: [
@@ -114,6 +111,15 @@ const styles = {
 };
 
 export default function DocsPage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem('vatrate_token');
+      setIsLoggedIn(!!token && token.trim() !== '');
+    } catch { /* ignore */ }
+  }, []);
+
   return (
     <div style={{minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', background: '#fafafa'}}>
       {/* Nav */}
@@ -121,10 +127,23 @@ export default function DocsPage() {
         <div style={styles.headerInner}>
           <Link href="/" style={styles.logo}>VAT<span style={{color: '#1e293b'}}>Rate</span></Link>
           <nav style={styles.nav}>
-            <Link href="/docs" style={styles.navLinkActive}>Docs</Link>
-            <Link href="/pricing" style={styles.navLink}>Pricing</Link>
-            <Link href="/login" style={styles.navLink}>Sign In</Link>
-            <Link href="/signup" style={styles.btnPrimary}>Sign Up Free</Link>
+            {isLoggedIn ? (
+              <>
+                <Link href="/dashboard" style={styles.navLink}>Dashboard</Link>
+                <Link href="/dashboard/logs" style={styles.navLink}>Logs</Link>
+                <Link href="/dashboard/settings" style={styles.navLink}>Settings</Link>
+                <Link href="/docs" style={styles.navLinkActive}>Docs</Link>
+                <Link href="/pricing" style={styles.navLink}>Pricing</Link>
+                <button onClick={() => { try { localStorage.clear(); } catch {}; window.location.href = '/'; }} style={{padding: '8px 16px', background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontWeight: 600}}>Logout</button>
+              </>
+            ) : (
+              <>
+                <Link href="/docs" style={styles.navLinkActive}>Docs</Link>
+                <Link href="/pricing" style={styles.navLink}>Pricing</Link>
+                <Link href="/login" style={styles.navLink}>Sign In</Link>
+                <Link href="/signup" style={styles.btnPrimary}>Sign Up Free</Link>
+              </>
+            )}
             <a href="https://github.com/davideponti/vatrate" target="_blank" rel="noopener noreferrer" style={{padding: '8px 16px', background: '#f3f4f6', color: '#1e293b', borderRadius: 8, textDecoration: 'none', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4}}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
               GitHub
@@ -245,7 +264,7 @@ export default function DocsPage() {
             <div style={{fontSize: 13, fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8}}>Company</div>
             <a href="mailto:info@vatrate.eu" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Contact</a>
             <a href="https://github.com/davideponti/vatrate/issues" target="_blank" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Report Issue</a>
-            <Link href="/terms" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Terms &amp; Conditions</Link>
+            <Link href="/terms" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Terms & Conditions</Link>
             <Link href="/privacy" style={{color: '#64748b', textDecoration: 'none', fontSize: 14}}>Privacy Policy</Link>
           </div>
         </div>
